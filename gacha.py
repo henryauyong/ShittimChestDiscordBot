@@ -8,7 +8,6 @@ current_banner = []
 
 raity = ['R','SR','SSR','SRP','SSRP']
 icon = ['🟦','🟨','🟪','🟨','🟪']
-weight = [78.5, 18.5, 3.0, 0.0, 0.0]
 
 with open("./gacha_data/global/r.txt", "r") as f:
     for line in f:
@@ -23,7 +22,8 @@ with open("./gacha_data/global/rateups.json", "r") as f:
     current_banner = json.load(f)
 
 def Pull(banner, spark):
-    # return random.choices(raity, weights=weight, k=1)[0]
+    weight = [78.5, 18.5, 3.0, 0.0, 0.0]
+
     for rateup in current_banner[banner]:
         if rateup in sr:
             sr.remove(rateup)
@@ -65,6 +65,7 @@ def PullTen(banner):
                 if list(j.values())[0] == raity[1] or list(j.values())[0] == raity[2] or list(j.values())[0] == raity[3] or list(j.values())[0] == raity[4]:
                     spark = False
                     break
+            print(f"i: {i} | Spark: {spark}")
             name_result, raity_result = Pull(banner, spark)
         else:
             name_result, raity_result = Pull(banner, False)

@@ -36,6 +36,7 @@ def Pull(banner, spark):
     if spark:
         weight[1] += weight[0]
         weight[0] = 0.0
+    print(weight)
     raity_result = random.choices(raity, weights=weight, k=1)
     if raity_result[0] == raity[0]:
         return random.choices(r, k=1)[0], raity_result[0]
@@ -85,5 +86,3 @@ def PullTenIcon(result):
             output += icon[2]
     
     return output
-
-print(PullTen(0))

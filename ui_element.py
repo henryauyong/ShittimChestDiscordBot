@@ -36,8 +36,8 @@ class GachaButton(discord.ui.Button):
         super().__init__(style=discord.ButtonStyle.primary, label="抽卡")
 
     async def callback(self, interaction:discord.Interaction):
-        result = gacha.PullTen()
-        await interaction.response.send_message(gacha.PullTenIcon(result), ephemeral=True)
+        result = gacha.PullTen(0)
+        await interaction.response.send_message(result, ephemeral=True)
 
 class MainUi():
     def Embed(self):

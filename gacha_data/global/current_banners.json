@@ -1,0 +1,38 @@
+[
+    {
+        "gachaType": "PickupGacha",
+        "rateups": [
+            {
+                "name": "Ichika",
+                "raity": "SSR"
+            }
+        ]
+    },
+    {
+        "gachaType": "PickupGacha",
+        "rateups": [
+            {
+                "name": "Kasumi",
+                "raity": "SSR"
+            }
+        ]
+    },
+    {
+        "gachaType": "PickupGacha",
+        "rateups": [
+            {
+                "name": "Ako",
+                "raity": "SSR"
+            }
+        ]
+    },
+    {
+        "gachaType": "PickupGacha",
+        "rateups": [
+            {
+                "name": "Iori",
+                "raity": "SSR"
+            }
+        ]
+    }
+]

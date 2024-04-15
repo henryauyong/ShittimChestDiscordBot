@@ -4,6 +4,8 @@ import json
 import random
 from discord import app_commands
 from pathlib import Path
+import PIL
+import PIL.Image
 
 pwd = Path(__file__).parent
 
@@ -99,6 +101,16 @@ def pull_ten(choice):
             results.append(result)
     return results
 
+def create_image(result):
+    base_image = PIL.Image.new("RGB", size=(600, 240))
+    for i in range(10):
+        char_image = PIL.Image.open((pwd/f"../gacha_data/global/image/{result[i]['name']}.png").as_posix())
+        if i <= 4:
+            base_image.paste(char_image, (i*120, 0))
+        else:
+            base_image.paste(char_image, ((i-5)*120, 120))
+    base_image.save("result.png")
+
 class Dropdown(discord.ui.Select):
     def __init__(self):
         options = []
@@ -118,7 +130,12 @@ class Dropdown(discord.ui.Select):
         embed = discord.Embed(title="招募結果", color=discord.Color.blue())
         for i in results:
             embed.add_field(name=i["name"], value=i["raity"])
-        await interaction.response.send_message(embed=embed, view=self.view)
+        
+        create_image(results)
+        file = discord.File("result.png")
+        embed.set_image(url="attachment://result.png")
+
+        await interaction.response.send_message(file=file, embed=embed, view=self.view)
 
 class View(discord.ui.View):
     def __init__(self):

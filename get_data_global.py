@@ -11,8 +11,29 @@ sr = []
 ssr = []
 limited_ssr = []
 fes_ssr = []
+id = []
+old_data = []
 
 current_banners = []
+
+# Update old data
+with open("./gacha_data/global/id.json", "r") as f:
+    old_data = json.load(f)
+
+# Get characters image & ID
+with open("./gacha_data/global/id.json", "w") as f:
+    old_name = [i["name"] for i in old_data]
+    for i in char_data:
+        name = i["name"]
+        char_id = i["id"]
+        if name not in old_name:
+            img_data = requests.get(f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{char_id}.webp").content
+            with open(f"./gacha_data/global/image/{name}.png", "wb") as f:
+                f.write(img_data)
+            print(f"Added {name}")
+        id.append({"name": name , "id": char_id})
+    json.dump(id, f, indent=4)
+    
 
 # Get SR characters
 with open("./gacha_data/global/sr.txt", "w") as f:

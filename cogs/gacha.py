@@ -6,6 +6,7 @@ from discord import app_commands
 from pathlib import Path
 import PIL
 import PIL.Image
+import PIL.ImageChops
 
 pwd = Path(__file__).parent
 
@@ -28,6 +29,15 @@ with open((pwd/"../gacha_data/global/fes_ssr.txt").as_posix(), "r") as f:
     fes_ssr = f.read().splitlines()
 with open((pwd/"../gacha_data/global/current_banners.json").as_posix(), "r") as f:
     current_banners = json.load(f)
+
+mask = PIL.Image.open((pwd/"../assets/mask.png").as_posix())
+border = PIL.Image.open((pwd/"../assets/border.png").as_posix())
+star = PIL.Image.open((pwd/"../assets/star.png").as_posix())
+two_star = PIL.Image.open((pwd/"../assets/two_star.png").as_posix())
+three_star = PIL.Image.open((pwd/"../assets/three_star.png").as_posix())
+purple_glow = PIL.Image.open((pwd/"../assets/purple_glow.png").as_posix())
+yellow_glow = PIL.Image.open((pwd/"../assets/yellow_glow.png").as_posix())
+pickup = PIL.Image.open((pwd/"../assets/pickup.png").as_posix())
 
 def pull(choice, spark):
     new_sr = sr.copy()
@@ -71,6 +81,7 @@ def pull(choice, spark):
         weight[1] += weight[0]
         weight[0] = 0
 
+    print(f"Pickup SSR: {pickup_ssr}")
     print(f"Weight: {weight}")
     print(f"Spark: {spark}")
     print("")
@@ -102,13 +113,30 @@ def pull_ten(choice):
     return results
 
 def create_image(result):
-    base_image = PIL.Image.new("RGB", size=(600, 240))
+    base_image = PIL.Image.new("RGBA", size=(640, 320), color=(194, 229, 245, 255))
     for i in range(10):
         char_image = PIL.Image.open((pwd/f"../gacha_data/global/image/{result[i]['name']}.png").as_posix())
+        char_image = PIL.ImageChops.multiply(char_image, mask)
+        if result[i]["raity"] == "R":
+            char_image.alpha_composite(border, dest=(-20, -20))
+            char_image.alpha_composite(star, dest=(-20, -20))
+        elif result[i]["raity"] == "SR" or result[i]["raity"] == "Pickup SR":
+            char_image.alpha_composite(yellow_glow, dest=(-20, -20))
+            char_image.alpha_composite(border, dest=(-20, -20))
+            char_image.alpha_composite(two_star, dest=(-20, -20))
+            if result[i]["raity"] == "Pickup SR":
+                char_image.alpha_composite(pickup, dest=(-20, -20))
+        elif result[i]["raity"] == "SSR" or result[i]["raity"] == "Pickup SSR":
+            char_image.alpha_composite(purple_glow, dest=(-20, -20))
+            char_image.alpha_composite(border, dest=(-20, -20))
+            char_image.alpha_composite(three_star, dest=(-20, -20))
+            if result[i]["raity"] == "Pickup SSR":
+                char_image.alpha_composite(pickup, dest=(-20, -20))
+
         if i <= 4:
-            base_image.paste(char_image, (i*120, 0))
+            base_image.alpha_composite(char_image, (i*120+20, 20))
         else:
-            base_image.paste(char_image, ((i-5)*120, 120))
+            base_image.alpha_composite(char_image, ((i-5)*120+20, 180))
     base_image.save("result.png")
 
 class Dropdown(discord.ui.Select):
@@ -128,6 +156,15 @@ class Dropdown(discord.ui.Select):
         choice = int(self.values[0])
         results = pull_ten(choice)
         embed = discord.Embed(title="招募結果", color=discord.Color.blue())
+
+        # count = 0
+        # while True:
+        #     count += 1
+        #     if "Ichika" in [i["name"] for i in results]:
+        #         break
+        #     results = pull_ten(choice)
+        # print(f"Pulls: {count*10}")
+
         for i in results:
             embed.add_field(name=i["name"], value=i["raity"])
         
@@ -139,7 +176,7 @@ class Dropdown(discord.ui.Select):
 
 class View(discord.ui.View):
     def __init__(self):
-        super().__init__()
+        super().__init__(timeout=None)
         self.add_item(Dropdown())
 
 class Gacha(commands.Cog):

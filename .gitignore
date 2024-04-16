@@ -2,3 +2,4 @@ env
 dctoken.py
 __pycache__
 gacha_data/global/image/
+gacha_data/global/id.json

@@ -3,3 +3,5 @@ dctoken.py
 __pycache__
 gacha_data/global/image/
 gacha_data/global/id.json
+gacha_data/japan/image/
+gacha_data/japan/id.json

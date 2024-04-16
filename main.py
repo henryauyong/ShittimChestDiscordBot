@@ -1,4 +1,4 @@
-from dctoken import token
+from dctoken import *
 import discord
 from discord.ext import commands
 from discord import ui
@@ -16,4 +16,4 @@ async def on_ready():
     print(f'Logged in as {bot.user.name} - {bot.user.id}')
     print('------')
 
-bot.run(token)
+bot.run(token_test)

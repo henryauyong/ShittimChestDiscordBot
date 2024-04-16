@@ -2,6 +2,7 @@ import datetime
 from discord.ext import commands, tasks
 from pathlib import Path
 from .utils import get_data_global
+from .utils import get_data_japan
 
 pwd = Path(__file__).parent
 utc = datetime.timezone.utc
@@ -19,6 +20,7 @@ class Update(commands.Cog):
     async def update(self):
         await self.bot.reload_extension('cogs.gacha')
         get_data_global.update()
+        get_data_japan.update()
         print(f"Updated at {datetime.datetime.now(utc)}")
     
 async def setup(bot):

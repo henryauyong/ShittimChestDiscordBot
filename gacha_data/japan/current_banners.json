@@ -3,7 +3,7 @@
         "gachaType": "PickupGacha",
         "rateups": [
             {
-                "name": "Shigure (Hot Spring)",
+                "name": "カズサ",
                 "raity": "SSR"
             }
         ]
@@ -12,7 +12,7 @@
         "gachaType": "PickupGacha",
         "rateups": [
             {
-                "name": "Cherino (Hot Spring)",
+                "name": "レイサ",
                 "raity": "SSR"
             }
         ]
@@ -21,17 +21,12 @@
         "gachaType": "PickupGacha",
         "rateups": [
             {
-                "name": "Chinatsu (Hot Spring)",
+                "name": "ナツ",
                 "raity": "SSR"
-            }
-        ]
-    },
-    {
-        "gachaType": "PickupGacha",
-        "rateups": [
+            },
             {
-                "name": "Nodoka (Hot Spring)",
-                "raity": "SSR"
+                "name": "マリー",
+                "raity": "SR"
             }
         ]
     }

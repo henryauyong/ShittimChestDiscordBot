@@ -1,0 +1,26 @@
+# from discord.ext import commands
+# import discord
+# from pathlib import Path
+
+# pwd = Path(__file__).parent
+
+# with open((pwd/"../config/admin_roles.txt").as_posix(), "r", encoding="utf-8") as f:
+#     ADMIN_ROLES = f.read().splitlines()
+
+# class Sync(commands.Cog):
+#     def __init__(self, bot):
+#         self.bot = bot
+
+#     @commands.command(name="sync", description="Sync commands")
+#     async def sync(self, ctx:commands.Context):
+#         try:
+#             if [i for i in ctx.author.roles if i.name == "test"]:
+#                 self.bot.tree.clear_commands(guild=discord.Object(id=863849091821994014))
+#                 self.bot.tree.copy_global_to(guild=discord.Object(id=863849091821994014))
+#                 synced = await self.bot.tree.sync(guild=discord.Object(id=863849091821994014))
+#                 await ctx.send(f"{len(synced)} Commands synced")
+#         except Exception as e:
+#             await ctx.send(e)
+
+# async def setup(bot):
+#     await bot.add_cog(Sync(bot))

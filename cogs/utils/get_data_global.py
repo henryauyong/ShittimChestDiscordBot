@@ -4,22 +4,21 @@ from pathlib import Path
 
 pwd = Path(__file__).parent
 
-char_data = requests.get("https://api.ennead.cc/buruaka/character")
-char_data = json.loads(char_data.text)
-
-banner_data = requests.get("https://api.ennead.cc/buruaka/banner")
-banner_data = json.loads(banner_data.text)
-
-sr = []
-ssr = []
-limited_ssr = []
-fes_ssr = []
-id = []
-old_data = []
-
-current_banners = []
-
 def update():
+    char_data = requests.get("https://api.ennead.cc/buruaka/character")
+    char_data = json.loads(char_data.text)
+
+    banner_data = requests.get("https://api.ennead.cc/buruaka/banner")
+    banner_data = json.loads(banner_data.text)
+
+    sr = []
+    ssr = []
+    limited_ssr = []
+    fes_ssr = []
+    id = []
+    old_data = []
+
+    current_banners = []
     # Update old data
     with open((pwd/"../../gacha_data/global/id.json").as_posix(), "r") as f:
         old_data = json.load(f)

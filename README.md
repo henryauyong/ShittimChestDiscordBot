@@ -2,6 +2,14 @@
 
 # 歡迎來到希迪姆的箱子，老師！
 
-抽卡 Discord 機器人
+Discord 抽卡機器人
 
-``pip -r requirements.txt``
+每天自動更新資料庫
+
+![image](https://github.com/henryauyong/ShittimChestDiscordBot/assets/26832631/b0ddcdc6-483e-49b3-949a-d379ea3385b1)
+
+## 安裝
+
+``pip install -r requirements.txt``
+
+``py main.py``

@@ -13,3 +13,10 @@ Discord 抽卡機器人
 ``pip install -r requirements.txt``
 
 ``py main.py``
+
+## 預計實裝功能
+
+1. 日服卡池
+2. 一抽 & 一井
+3. 常駐池撈一隻角色
+4. 100% 彩（？）

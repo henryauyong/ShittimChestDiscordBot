@@ -8,10 +8,11 @@ class Sync(commands.Cog):
     @commands.command(name="sync", description="Sync commands")
     async def sync(self, ctx:commands.Context):
         try:
-            self.bot.tree.clear_commands(guild=discord.Object(id=863849091821994014))
-            self.bot.tree.copy_global_to(guild=discord.Object(id=863849091821994014))
-            synced = await self.bot.tree.sync(guild=discord.Object(id=863849091821994014))
-            await ctx.send(f"{len(synced)} Commands synced")
+            if [i for i in ctx.author.roles if i.name == "test"]:
+                self.bot.tree.clear_commands(guild=discord.Object(id=863849091821994014))
+                self.bot.tree.copy_global_to(guild=discord.Object(id=863849091821994014))
+                synced = await self.bot.tree.sync(guild=discord.Object(id=863849091821994014))
+                await ctx.send(f"{len(synced)} Commands synced")
         except Exception as e:
             await ctx.send(e)
 

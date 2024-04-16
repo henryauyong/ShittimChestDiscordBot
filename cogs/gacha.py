@@ -81,10 +81,10 @@ def pull(choice, spark):
         weight[1] += weight[0]
         weight[0] = 0
 
-    print(f"Pickup SSR: {pickup_ssr}")
-    print(f"Weight: {weight}")
-    print(f"Spark: {spark}")
-    print("")
+    # print(f"Pickup SSR: {pickup_ssr}")
+    # print(f"Weight: {weight}")
+    # print(f"Spark: {spark}")
+    # print("")
 
     raity_result = random.choices(["R", "SR", "SSR", "Pickup SR", "Pickup SSR", "Fes SSR"], weight)[0]
     if raity_result == "R":
@@ -165,14 +165,15 @@ class Dropdown(discord.ui.Select):
         #     results = pull_ten(choice)
         # print(f"Pulls: {count*10}")
 
-        for i in results:
-            embed.add_field(name=i["name"], value=i["raity"])
+        # for i in results:
+        #     embed.add_field(name=i["name"], value=i["raity"])
         
         create_image(results)
         file = discord.File("result.png")
         embed.set_image(url="attachment://result.png")
 
-        await interaction.response.send_message(file=file, embed=embed, view=self.view)
+        
+        await interaction.response.send_message(content=interaction.user.mention, file=file, embed=embed, view=self.view)
 
 class View(discord.ui.View):
     def __init__(self):
@@ -190,3 +191,4 @@ class Gacha(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Gacha(bot))
+    print("Gacha cog loaded")

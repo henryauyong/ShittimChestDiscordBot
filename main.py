@@ -11,6 +11,7 @@ async def on_ready():
     await bot.load_extension('cogs.admin')
     await bot.load_extension('cogs.sync')
     await bot.load_extension('cogs.gacha')
+    await bot.load_extension('cogs.update')
 
     print(f'Logged in as {bot.user.name} - {bot.user.id}')
     print('------')

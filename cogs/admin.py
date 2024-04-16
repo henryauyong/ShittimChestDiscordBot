@@ -1,18 +1,54 @@
 from discord.ext import commands
+from .utils import get_data_global
+from pathlib import Path
 import discord
+
+pwd = Path(__file__).parent
+
+with open((pwd/"../config/admin_roles.txt").as_posix(), "r", encoding="utf-8") as f:
+    ADMIN_ROLES = f.read().splitlines()
 
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(name="reload", description="Reload commands")
+    @commands.command(name="reload", description="重新載入指令")
     async def reload(self, ctx:commands.Context):
         try:
-            if [i for i in ctx.author.roles if i.name == "test"]:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
                 await self.bot.reload_extension('cogs.admin')
-                await self.bot.reload_extension('cogs.sync')
+                # await self.bot.reload_extension('cogs.sync')
                 await self.bot.reload_extension('cogs.gacha')
-                await ctx.send("Reloaded")
+                await ctx.send("Reloaded all commands")
+        except Exception as e:
+            await ctx.send(e)
+
+    @commands.command(name="update", description="手動更新資料庫")
+    async def update(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                get_data_global.update()
+                await ctx.send("Updated database manually")
+        except Exception as e:
+            await ctx.send(e)
+
+    @commands.command(name="sync", description="")
+    async def sync(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                self.bot.tree.clear_commands(guild=discord.Object(id=863849091821994014))
+                self.bot.tree.copy_global_to(guild=discord.Object(id=863849091821994014))
+                synced = await self.bot.tree.sync(guild=discord.Object(id=863849091821994014))
+                await ctx.send(f"{len(synced)} Commands synced")
+        except Exception as e:
+            await ctx.send(e)
+
+    @commands.command(name="sync-global", description="同步全域指令")
+    async def sync_global(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                synced = await self.bot.tree.sync()
+                await ctx.send(f"{len(synced)} Commands synced")
         except Exception as e:
             await ctx.send(e)
         

@@ -172,7 +172,6 @@ class Dropdown(discord.ui.Select):
         file = discord.File("result.png")
         embed.set_image(url="attachment://result.png")
 
-        
         await interaction.response.send_message(content=interaction.user.mention, file=file, embed=embed, view=self.view)
 
 class View(discord.ui.View):

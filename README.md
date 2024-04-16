@@ -4,4 +4,4 @@
 
 抽卡 Discord 機器人
 
-``pip -r requirement.txt``
+``pip -r requirements.txt``

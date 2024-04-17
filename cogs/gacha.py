@@ -62,7 +62,7 @@ purple_glow = PIL.Image.open((pwd/"../assets/purple_glow.png").as_posix())
 yellow_glow = PIL.Image.open((pwd/"../assets/yellow_glow.png").as_posix())
 pickup = PIL.Image.open((pwd/"../assets/pickup.png").as_posix())
 
-def pull(server, choice, spark):
+def pull(server, choice, last_pull):
     new_r = (r if server == "gl" else jp_r).copy()
     new_sr = (sr if server == "gl" else jp_sr).copy()
     new_ssr = (ssr if server == "gl" else jp_ssr).copy()
@@ -103,7 +103,7 @@ def pull(server, choice, spark):
             for rateup in banner[choice]["rateups"]:
                 new_fes_ssr.remove(rateup["name"])
                 pickup_ssr.append(rateup["name"])
-    if spark:
+    if last_pull:
         weight[1] += weight[0]
         weight[0] = 0
     # print(f"Pickup SSR: {pickup_ssr}")
@@ -113,24 +113,25 @@ def pull(server, choice, spark):
     # print("")
 
     raity_result = random.choices(["R", "SR", "SSR", "Pickup SR", "Pickup SSR", "Fes SSR"], weight)[0]
+    result = {}
     if raity_result == "R":
-        return random.choice(new_r), raity_result, server
+        result["name"], result["raity"], result["server"] = random.choice(new_r), raity_result, server
     elif raity_result == "SR":
-        return random.choice(new_sr), raity_result, server
+        result["name"], result["raity"], result["server"] = random.choice(new_sr), raity_result, server
     elif raity_result == "SSR":
-        return random.choice(new_ssr), raity_result, server
+        result["name"], result["raity"], result["server"] = random.choice(new_ssr), raity_result, server
     elif raity_result == "Pickup SR":
-        return random.choice(pickup_sr), raity_result, server
+        result["name"], result["raity"], result["server"] = random.choice(pickup_sr), raity_result, server
     elif raity_result == "Pickup SSR":
-        return random.choice(pickup_ssr), raity_result, server
+        result["name"], result["raity"], result["server"] = random.choice(pickup_ssr), raity_result, server
     elif raity_result == "Fes SSR":
-        return random.choice(new_fes_ssr), raity_result, server
+        result["name"], result["raity"], result["server"] = random.choice(new_fes_ssr), raity_result, server
+    return result 
     
 def pull_ten(server, choice):
     results = []
     for i in range(10):
-        result = {}
-        result["name"], result["raity"], result["server"] = pull(server, choice, False if i != 9 else True)
+        result = pull(server, choice, False if i != 9 else True)
         results.append(result)
     return results
 
@@ -207,7 +208,8 @@ def gacha_embed(server, choice, results):
     return embed, result_image
 
 class Dropdown(discord.ui.Select):
-    def __init__(self):
+    def __init__(self, mode = "ten"):
+        self.mode = mode
         options = []
         for banner in current_banners:
             banner_name = ''
@@ -245,6 +247,7 @@ class Dropdown(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        mode = self.mode
         choice = int(self.values[0])
         if choice == -2:
             server = "jp"
@@ -252,42 +255,59 @@ class Dropdown(discord.ui.Select):
             server = "gl" if choice < len(current_banners) else "jp"
         if server == "jp":
             choice -= len(current_banners)
-        results = pull_ten(server, choice)
+        
+        if mode == "single":
+            result = pull(server, choice, False)
+            results = [result]
+        elif mode == "ten":
+            results = pull_ten(server, choice)
         embed, result_image = gacha_embed(server, choice, results)
-        view = View(server, choice, "button")
+        view = View(mode, server, choice, type="button")
         await interaction.followup.send(content=interaction.user.mention, file=result_image, embed=embed, view=view)
 
 class Button(discord.ui.Button):
-    def __init__(self, server, choice):
+    def __init__(self, mode, server, choice):
         super().__init__(label="再抽一次！", style=discord.ButtonStyle.primary, custom_id="gacha_button")
+        self.mode = mode
         self.server = server
         self.choice = choice
+
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        mode = self.mode
         choice = int(self.choice)
         server = self.server
         
-        results = pull_ten(server, choice)
+        if mode == "single":
+            result = pull(server, choice, False)
+            results = [result]
+        elif mode == "ten":
+            results = pull_ten(server, choice)
         embed, result_image = gacha_embed(server, choice, results)
-        view = View(server, choice, "button")
+        view = View(mode, server, choice, type="button")
         await interaction.followup.send(content=interaction.user.mention, file=result_image, embed=embed, view=view)
 
 class View(discord.ui.View):
-    def __init__(self, server = "gl", choice = "-1", type = "dropdown"):
+    def __init__(self, mode = "ten", server = "gl", choice = "-1", type = "dropdown"):
         super().__init__(timeout=None)
         if type == "dropdown":
-            self.add_item(Dropdown())
+            self.add_item(Dropdown(mode))
         if type == "button":
-            self.add_item(Button(server, choice))
+            self.add_item(Button(mode, server, choice))
 
 class Gacha(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @app_commands.command(name="gacha", description="Gacha commands")
-    async def gacha(self, interaction: discord.Interaction):
+    @app_commands.describe(mode="選擇一次招募的數量")
+    @app_commands.choices(mode=[
+        app_commands.Choice(name="single", value="single"),
+        app_commands.Choice(name="ten", value="ten")
+    ])
+    async def gacha(self, interaction: discord.Interaction, mode: app_commands.Choice[str]):
         embed = discord.Embed(title="招募", description="選擇你的招募", color=discord.Color.blue())
-        await interaction.response.send_message(embed=embed, view=View(), ephemeral=True)
+        await interaction.response.send_message(embed=embed, view=View(mode.value), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Gacha(bot))

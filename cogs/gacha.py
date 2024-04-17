@@ -175,6 +175,37 @@ def create_image_single(result):
             base_char_image.alpha_composite(pickup, dest=(0, 0))
     return base_char_image
 
+def gacha_embed(server, choice, results):
+    banner = current_banners if server == "gl" else jp_current_banners
+    banner_name = "卡池："
+    banner_name += "國際服 " if server == "gl" else "日服 "
+    banner_type = banner[choice]["gachaType"] if choice > -1 else "PermanentGacha"
+    if choice > -1:
+        if banner_type == "PickupGacha":
+            banner_name += "特選招募 "
+        elif banner_type == "LimitedGacha":
+            banner_name += "限定招募 "
+        elif banner_type == "FesGacha":
+            banner_name += "Fes招募 "
+        for rateup in banner[choice]["rateups"]:
+            banner_name += f" {rateup['name']}"
+            if rateup != banner[choice]["rateups"][-1]:
+                banner_name += " & "
+    else:
+        banner_name += "常駐招募"
+
+    embed = discord.Embed(title="老師，請收下！", color=discord.Color.blue(), description=f"{banner_name}")
+    char_images = []
+    
+    for i in results:
+        char_images.append(create_image_single(i))
+    generate_image(char_images)
+    result_image = discord.File("result.png")
+    embed.set_image(url="attachment://result.png")
+    embed.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZmzniB5Fiiz8ajKGCLmPHywDj_dCaR71O9O0DEcqV0g&s")
+
+    return embed, result_image
+
 class Dropdown(discord.ui.Select):
     def __init__(self):
         options = []
@@ -222,40 +253,37 @@ class Dropdown(discord.ui.Select):
         if server == "jp":
             choice -= len(current_banners)
         results = pull_ten(server, choice)
+        embed, result_image = gacha_embed(server, choice, results)
+        view = View(server, choice, "button")
+        await interaction.followup.send(content=interaction.user.mention, file=result_image, embed=embed, view=view)
 
-        banner = current_banners if server == "gl" else jp_current_banners
-        banner_name = "卡池："
-        banner_name += "國際服 " if server == "gl" else "日服 "
-        banner_type = banner[choice]["gachaType"] if choice > -1 else "PermanentGacha"
-        if choice > -1:
-            if banner_type == "PickupGacha":
-                banner_name += "特選招募 "
-            elif banner_type == "LimitedGacha":
-                banner_name += "限定招募 "
-            elif banner_type == "FesGacha":
-                banner_name += "Fes招募 "
-            for rateup in banner[choice]["rateups"]:
-                banner_name += f" {rateup['name']}"
-                if rateup != banner[choice]["rateups"][-1]:
-                    banner_name += " & "
+class Button(discord.ui.Button):
+    def __init__(self, server, choice):
+        super().__init__(label="再抽一次！", style=discord.ButtonStyle.primary, custom_id="gacha_button")
+        self.server = server
+        self.choice = choice
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        choice = int(self.choice)
+        server = self.server
+        if choice == -2:
+            server = "jp"
         else:
-            banner_name += "常駐招募"
-
-        embed = discord.Embed(title="老師，請收下！", color=discord.Color.blue(), description=f"{banner_name}")
-        char_images = []
-        
-        for i in results:
-            char_images.append(create_image_single(i))
-        generate_image(char_images)
-        result_image = discord.File("result.png")
-        embed.set_image(url="attachment://result.png")
-        embed.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZmzniB5Fiiz8ajKGCLmPHywDj_dCaR71O9O0DEcqV0g&s")
-        await interaction.followup.send(content=interaction.user.mention, file=result_image, embed=embed, view=self.view)
+            server = "gl" if choice < len(current_banners) else "jp"
+        if server == "jp":
+            choice -= len(current_banners)
+        results = pull_ten(server, choice)
+        embed, result_image = gacha_embed(server, choice, results)
+        view = View(server, choice, "button")
+        await interaction.followup.send(content=interaction.user.mention, file=result_image, embed=embed, view=view)
 
 class View(discord.ui.View):
-    def __init__(self):
+    def __init__(self, server = "gl", choice = "-1", type = "dropdown"):
         super().__init__(timeout=None)
-        self.add_item(Dropdown())
+        if type == "dropdown":
+            self.add_item(Dropdown())
+        if type == "button":
+            self.add_item(Button(server, choice))
 
 class Gacha(commands.Cog):
     def __init__(self, bot):

@@ -299,7 +299,7 @@ class Gacha(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="gacha", description="Gacha commands")
+    @app_commands.command(name="gacha", description="模擬抽卡")
     @app_commands.describe(mode="選擇一次招募的數量")
     @app_commands.choices(mode=[
         app_commands.Choice(name="單抽", value="single"),

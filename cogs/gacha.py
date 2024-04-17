@@ -266,12 +266,7 @@ class Button(discord.ui.Button):
         await interaction.response.defer()
         choice = int(self.choice)
         server = self.server
-        if choice == -2:
-            server = "jp"
-        else:
-            server = "gl" if choice < len(current_banners) else "jp"
-        if server == "jp":
-            choice -= len(current_banners)
+        
         results = pull_ten(server, choice)
         embed, result_image = gacha_embed(server, choice, results)
         view = View(server, choice, "button")

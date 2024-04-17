@@ -107,6 +107,8 @@ def update():
     with open((pwd/"../../gacha_data/japan/current_banners.json").as_posix(), "w", encoding="utf-8") as f:
         json.dump(current_banners, f, indent=4, ensure_ascii=False)
 
+    print("Updated Japan data")
+
 
     
 

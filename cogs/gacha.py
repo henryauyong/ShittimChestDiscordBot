@@ -62,10 +62,7 @@ purple_glow = PIL.Image.open((pwd/"../assets/purple_glow.png").as_posix())
 yellow_glow = PIL.Image.open((pwd/"../assets/yellow_glow.png").as_posix())
 pickup = PIL.Image.open((pwd/"../assets/pickup.png").as_posix())
 
-def pull(choice, spark):
-    server = "gl" if choice < len(current_banners) else "jp"
-    server = "jp" if choice == -2 else server
-    
+def pull(server, choice, spark):
     new_r = (r if server == "gl" else jp_r).copy()
     new_sr = (sr if server == "gl" else jp_sr).copy()
     new_ssr = (ssr if server == "gl" else jp_ssr).copy()
@@ -79,8 +76,6 @@ def pull(choice, spark):
     # R, SR, SSR, Pickup SR, Pickup SSR, Fes SSR
     weight = [78.5, 18.5, 3, 0, 0, 0]
     if choice > -1:
-        if server == "jp":
-            choice -= len(current_banners)
         if banner[choice]["gachaType"] == "PickupGacha":
             for rateup in banner[choice]["rateups"]:
                 if rateup["raity"] == "SR":
@@ -111,11 +106,11 @@ def pull(choice, spark):
     if spark:
         weight[1] += weight[0]
         weight[0] = 0
-    print(f"Pickup SSR: {pickup_ssr}")
-    print(f"Pickup SR: {pickup_sr}")
-    print(f"Weight: {weight}")
-    print(f"Spark: {spark}")
-    print("")
+    # print(f"Pickup SSR: {pickup_ssr}")
+    # print(f"Pickup SR: {pickup_sr}")
+    # print(f"Weight: {weight}")
+    # print(f"Spark: {spark}")
+    # print("")
 
     raity_result = random.choices(["R", "SR", "SSR", "Pickup SR", "Pickup SSR", "Fes SSR"], weight)[0]
     if raity_result == "R":
@@ -131,11 +126,11 @@ def pull(choice, spark):
     elif raity_result == "Fes SSR":
         return random.choice(new_fes_ssr), raity_result, server
     
-def pull_ten(choice):
+def pull_ten(server, choice):
     results = []
     for i in range(10):
         result = {}
-        result["name"], result["raity"], result["server"] = pull(choice, False if i != 9 else True)
+        result["name"], result["raity"], result["server"] = pull(server, choice, False if i != 9 else True)
         results.append(result)
     return results
 
@@ -159,10 +154,9 @@ def create_image_single(result):
     else:
         char = PIL.Image.open((pwd/f"../gacha_data/japan/image/{translate[result['name']]}.png").as_posix())
     char = char.convert("RGBA")
-    print(PIL.ImageChops.difference(char, mask))
+    # print(PIL.ImageChops.difference(char, mask))
     char = PIL.ImageChops.multiply(char, mask)
     base_char_image.alpha_composite(char, dest=(20, 20))
-    base_char_image.save("result2.png")
     raity = result["raity"]
     if raity == "R":
         base_char_image.alpha_composite(border, dest=(0, 0))
@@ -216,22 +210,47 @@ class Dropdown(discord.ui.Select):
             options.append(discord.SelectOption(label=f"日服：{banner_name}", value=str(jp_current_banners.index(banner) + len(current_banners)), description=banner_type))
         options.append(discord.SelectOption(label="日服：常駐招募", value="-2", description=""))
 
-        super().__init__(placeholder="選擇卡池", options=options)
+        super().__init__(placeholder="選擇卡池", options=options, custom_id="gacha_dropdown")
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         choice = int(self.values[0])
-        results = pull_ten(choice)
-        embed = discord.Embed(title="招募結果", color=discord.Color.blue())
+        if choice == -2:
+            server = "jp"
+        else:
+            server = "gl" if choice < len(current_banners) else "jp"
+        if server == "jp":
+            choice -= len(current_banners)
+        results = pull_ten(server, choice)
+
+        banner = current_banners if server == "gl" else jp_current_banners
+        banner_name = "卡池："
+        banner_name += "國際服 " if server == "gl" else "日服 "
+        banner_type = banner[choice]["gachaType"] if choice > -1 else "PermanentGacha"
+        if choice > -1:
+            if banner_type == "PickupGacha":
+                banner_name += "特選招募 "
+            elif banner_type == "LimitedGacha":
+                banner_name += "限定招募 "
+            elif banner_type == "FesGacha":
+                banner_name += "Fes招募 "
+            for rateup in banner[choice]["rateups"]:
+                banner_name += f" {rateup['name']}"
+                if rateup != banner[choice]["rateups"][-1]:
+                    banner_name += " & "
+        else:
+            banner_name += "常駐招募"
+
+        embed = discord.Embed(title="老師，請收下！", color=discord.Color.blue(), description=f"{banner_name}")
         char_images = []
         
         for i in results:
             char_images.append(create_image_single(i))
         generate_image(char_images)
-        file = discord.File("result.png")
+        result_image = discord.File("result.png")
         embed.set_image(url="attachment://result.png")
-
-        await interaction.followup.send(content=interaction.user.mention, file=file, embed=embed, view=self.view)
+        embed.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZmzniB5Fiiz8ajKGCLmPHywDj_dCaR71O9O0DEcqV0g&s")
+        await interaction.followup.send(content=interaction.user.mention, file=result_image, embed=embed, view=self.view)
 
 class View(discord.ui.View):
     def __init__(self):
@@ -247,6 +266,7 @@ class Gacha(commands.Cog):
         embed = discord.Embed(title="招募", description="選擇你的招募", color=discord.Color.blue())
         await interaction.response.send_message(embed=embed, view=View(), ephemeral=True)
 
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Gacha(bot))
+    bot.add_view(View())
     print("Gacha cog loaded")

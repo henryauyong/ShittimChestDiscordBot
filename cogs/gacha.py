@@ -302,8 +302,8 @@ class Gacha(commands.Cog):
     @app_commands.command(name="gacha", description="Gacha commands")
     @app_commands.describe(mode="選擇一次招募的數量")
     @app_commands.choices(mode=[
-        app_commands.Choice(name="single", value="single"),
-        app_commands.Choice(name="ten", value="ten")
+        app_commands.Choice(name="單抽", value="single"),
+        app_commands.Choice(name="十抽", value="ten")
     ])
     async def gacha(self, interaction: discord.Interaction, mode: app_commands.Choice[str]):
         embed = discord.Embed(title="招募", description="選擇你的招募", color=discord.Color.blue())

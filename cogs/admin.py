@@ -17,8 +17,9 @@ class Admin(commands.Cog):
         try:
             if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
                 await self.bot.reload_extension('cogs.admin')
-                # await self.bot.reload_extension('cogs.sync')
                 await self.bot.reload_extension('cogs.gacha')
+                await self.bot.reload_extension('cogs.update')
+                await self.bot.reload_extension('cogs.rps')
                 await ctx.send("Reloaded all commands")
         except Exception as e:
             await ctx.send(e)

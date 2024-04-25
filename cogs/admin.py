@@ -1,5 +1,6 @@
 from discord.ext import commands
 from .utils import get_data_global
+from .utils import get_data_japan
 from pathlib import Path
 import discord
 
@@ -29,6 +30,7 @@ class Admin(commands.Cog):
         try:
             if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
                 get_data_global.update()
+                get_data_japan.update()
                 await ctx.send("Updated database manually")
         except Exception as e:
             await ctx.send(e)

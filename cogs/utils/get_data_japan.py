@@ -109,7 +109,4 @@ def update():
 
     print("Updated Japan data")
 
-
-    
-
 update()

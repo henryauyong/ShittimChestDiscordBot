@@ -6,7 +6,7 @@ Discord 抽卡機器人
 
 ~~每天自動更新資料庫~~
 
-![image](https://github.com/henryauyong/ShittimChestDiscordBot/assets/26832631/b0ddcdc6-483e-49b3-949a-d379ea3385b1)
+![image](https://github.com/henryauyong/ShittimChestDiscordBot/assets/26832631/a2cf449f-9b34-4546-8c3c-040cd7afa927)
 
 ## 安裝
 

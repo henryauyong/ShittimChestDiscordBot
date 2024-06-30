@@ -9,7 +9,7 @@ app = Flask(__name__)
 def get_raid_data():
     token = request.headers.get('Token')
     if token != TOKEN:
-        return 'Invalid Token'
+        return 'Invalid Token', 401
     result = 'OK'
     if request.is_json:
         data = request.get_json()

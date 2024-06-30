@@ -20,8 +20,8 @@ def update():
 
     with open((pwd/"../../raid_data/global/RaidSeasonManageExcelTable.json").as_posix(), "r", encoding="utf-8") as f:
         with open((pwd/"../../raid_data/global/EliminateRaidSeasonManageExcelTable.json").as_posix(), "r", encoding="utf-8") as f2:
-            ta_data = json.load(f)
-            ga_data = json.load(f2)
+            ta_data = json.load(f)["data"]
+            ga_data = json.load(f2)["data"]
             for i in reversed(ta_data):
                 start_date = datetime.strptime(i["SeasonStartData"], "%Y-%m-%d %H:%M:%S")
                 end_date = datetime.strptime(i["SeasonEndData"], "%Y-%m-%d %H:%M:%S")

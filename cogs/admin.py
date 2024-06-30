@@ -21,6 +21,7 @@ class Admin(commands.Cog):
                 await self.bot.reload_extension('cogs.gacha')
                 await self.bot.reload_extension('cogs.update')
                 await self.bot.reload_extension('cogs.rps')
+                await self.bot.reload_extension('cogs.raid')
                 await ctx.send("Reloaded all commands")
         except Exception as e:
             await ctx.send(e)

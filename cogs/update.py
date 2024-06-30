@@ -3,25 +3,27 @@ from discord.ext import commands, tasks
 from pathlib import Path
 from .utils import get_data_global
 from .utils import get_data_japan
+from .utils import get_raid_global
+from datetime import timedelta
+import pytz
 
 pwd = Path(__file__).parent
-utc = datetime.timezone.utc
-time = datetime.time(hour=7, minute=0, second=0, tzinfo=utc)
+timezone = pytz.timezone('Asia/Taipei')
 
 class Update(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.update.start()
 
-    def cog_unload(self):
-        self.update.cancel()
-
-    @tasks.loop(time=time)
-    async def update(self):
-        await self.bot.reload_extension('cogs.gacha')
+    async def update_gacha(self):
         get_data_global.update()
         get_data_japan.update()
-        print(f"Updated at {datetime.datetime.now(utc)}")
+        await self.bot.reload_extension('cogs.gacha')
+        print(f"Updated gacha data at {datetime.datetime.now(timezone)}")
+
+    async def update_raid(self):
+        get_raid_global.update()
+        await self.bot.reload_extension('cogs.raid')
+        print(f"Updated raid data at {datetime.datetime.now(timezone)}")
     
 async def setup(bot):
     await bot.add_cog(Update(bot))

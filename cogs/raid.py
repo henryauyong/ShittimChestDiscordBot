@@ -85,6 +85,7 @@ class Commands(commands.Cog):
         else:
             embed = discord.Embed(title="奇普托斯目前爲和平狀態", color=discord.Color.red())
             embed.set_footer(text=f"資料更新時間：{str(datetime.datetime.now(timezone)).split('.')[0]}")
+            embed.set_thumbnail(url=image_link["Arona_peace"])
             await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='raid-user-search', description='查看指定玩家在當期總力戰/大決戰的排名')
@@ -115,6 +116,7 @@ class Commands(commands.Cog):
         else:
             embed = discord.Embed(title="奇普托斯目前爲和平狀態", description="_現在都沒有總力戰還在稽查別人阿_", color=discord.Color.red())
             embed.set_footer(text=f"資料更新時間：{str(datetime.datetime.now(timezone)).split('.')[0]}")
+            embed.set_thumbnail(url=image_link["Arona_peace"])
             await interaction.response.send_message(embed=embed)
 
 async def setup(bot: commands.Bot):

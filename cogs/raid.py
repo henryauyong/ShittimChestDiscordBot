@@ -122,7 +122,7 @@ class Commands(commands.Cog):
                     await interaction.followup.send(embed=embed, file=icon_image)
                     found = True
             if not found:
-                await interaction.response.send_message(f"找不到 {user} 的資料")
+                await interaction.followup.send(f"找不到 {user} 的資料")
         else:
             embed = discord.Embed(title="奇普托斯目前爲和平狀態", description="_現在都沒有總力戰還在稽查別人阿_", color=discord.Color.red())
             embed.set_footer(text=f"資料更新時間：{str(datetime.datetime.now(timezone)).split('.')[0]}")

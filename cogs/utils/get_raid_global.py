@@ -1,9 +1,12 @@
 from pathlib import Path
 import json
 from datetime import datetime
+from datetime import timedelta
+import pytz
 
-CURRENT_DATETIME = datetime.strptime("2024-06-18 23:59:59", "%Y-%m-%d %H:%M:%S")
-# CURRENT_DATETIME = datetime.now()
+timezone = pytz.timezone('Asia/Taipei')
+CURRENT_DATETIME = datetime.now(timezone).replace(tzinfo=None)
+# CURRENT_DATETIME = datetime.strptime("2024-07-02 09:59:00", "%Y-%m-%d %H:%M:%S")
 
 pwd = Path(__file__).parent
 
@@ -24,18 +27,18 @@ def update():
             ta_data = json.load(f)["Data"]
             ga_data = json.load(f2)["Data"]
             for i in reversed(ta_data):
-                start_date = datetime.strptime(i["SeasonStartData"], "%Y-%m-%d %H:%M:%S")
-                end_date = datetime.strptime(i["SeasonEndData"], "%Y-%m-%d %H:%M:%S")
+                start_date = datetime.strptime(i["SeasonStartData"], "%Y-%m-%d %H:%M:%S") - timedelta(hours=1)
+                end_date = datetime.strptime(i["SeasonEndData"], "%Y-%m-%d %H:%M:%S") - timedelta(hours=1)
                 if start_date < CURRENT_DATETIME and end_date > CURRENT_DATETIME:
                     current_raid["Type"] = "總力戰"
                     current_raid["Season"] = i["SeasonDisplay"]
                     current_raid["Name"] = i["OpenRaidBossGroup"][0].split("_")[0]
-                    current_raid["StartData"] = i["SeasonStartData"]
-                    current_raid["EndData"] = i["SeasonEndData"]
+                    current_raid["StartData"] = (datetime.strptime(i["SeasonStartData"], "%Y-%m-%d %H:%M:%S") - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
+                    current_raid["EndData"] = (datetime.strptime(i["SeasonEndData"], "%Y-%m-%d %H:%M:%S") - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
                     break
             for i in reversed(ga_data):
-                start_date = datetime.strptime(i["SeasonStartData"], "%Y-%m-%d %H:%M:%S")
-                end_date = datetime.strptime(i["SeasonEndData"], "%Y-%m-%d %H:%M:%S")
+                start_date = datetime.strptime(i["SeasonStartData"], "%Y-%m-%d %H:%M:%S") - timedelta(hours=1)
+                end_date = datetime.strptime(i["SeasonEndData"], "%Y-%m-%d %H:%M:%S") - timedelta(hours=1)
                 if start_date < CURRENT_DATETIME and end_date > CURRENT_DATETIME:
                     current_raid["Type"] = "大決戰"
                     current_raid["Season"] = i["SeasonDisplay"]

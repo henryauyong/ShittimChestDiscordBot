@@ -5,10 +5,14 @@ from discord import app_commands
 from pathlib import Path
 import datetime
 import pytz
+from datetime import timedelta
+from datetime import datetime
 
 pwd = Path(__file__).parent
 
 timezone = pytz.timezone('Asia/Taipei')
+CURRENT_DATETIME = datetime.now(timezone).replace(tzinfo=None)
+# CURRENT_DATETIME = datetime.strptime("2024-07-02 09:59:00", "%Y-%m-%d %H:%M:%S")
 
 char_id = {}
 image_link = {}
@@ -76,6 +80,20 @@ class RaidLineEmbed(discord.Embed):
         self.add_field(name=f'{silver_emoji} 第一名：{silver_name}', value=f'分數：{silver_score}', inline=False)
         self.set_footer(text=f'資料更新時間：{update_time}')
 
+class ReadyEmbed(discord.Embed):
+    def __init__(self, server: str, bot: commands.Bot):
+        if server == "國際服":
+            type = global_type
+            season = global_season
+            name = global_name
+            start_data = global_start_data
+            end_data = global_end_data
+
+        super().__init__(title=f'{server} 第{season}期{type} {translate[name]}',description=f'{start_data} - {end_data}', color=discord.Color.blue())
+        self.set_thumbnail(url=image_link[name])
+        self.add_field(name="正在準備資料", value="", inline=False)
+        self.set_footer(text=f"資料更新時間：{str(CURRENT_DATETIME).split('.')[0]}")
+
 class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -83,11 +101,17 @@ class Commands(commands.Cog):
     @app_commands.command(name='raid-line', description='查看當期總力戰/大決戰檔線')
     async def raid(self, interaction: discord.Interaction):
         if global_current_raid:
+            global_start_datetime = datetime.strptime(global_start_data, "%Y-%m-%d %H:%M:%S")
+            global_end_datetime = datetime.strptime(global_end_data, "%Y-%m-%d %H:%M:%S")
+            if CURRENT_DATETIME - timedelta(hours=2) <= global_start_datetime:
+                embed = ReadyEmbed("國際服", self.bot)
+                await interaction.response.send_message(embed=embed)
+                return
             embed = RaidLineEmbed("國際服", self.bot)
             await interaction.response.send_message(embed=embed)
         else:
             embed = discord.Embed(title="奇普托斯目前爲和平狀態", color=discord.Color.red())
-            embed.set_footer(text=f"資料更新時間：{str(datetime.datetime.now(timezone)).split('.')[0]}")
+            embed.set_footer(text=f"資料更新時間：{str(CURRENT_DATETIME).split('.')[0]}")
             embed.set_thumbnail(url=image_link["Arona_peace"])
             await interaction.response.send_message(embed=embed)
 
@@ -125,7 +149,7 @@ class Commands(commands.Cog):
                 await interaction.followup.send(f"找不到 {user} 的資料")
         else:
             embed = discord.Embed(title="奇普托斯目前爲和平狀態", description="_現在都沒有總力戰還在稽查別人阿_", color=discord.Color.red())
-            embed.set_footer(text=f"資料更新時間：{str(datetime.datetime.now(timezone)).split('.')[0]}")
+            embed.set_footer(text=f"資料更新時間：{str(CURRENT_DATETIME).split('.')[0]}")
             embed.set_thumbnail(url=image_link["Arona_peace"])
             await interaction.response.send_message(embed=embed)
 

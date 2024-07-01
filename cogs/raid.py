@@ -10,9 +10,12 @@ pwd = Path(__file__).parent
 
 timezone = pytz.timezone('Asia/Taipei')
 
+char_id = {}
 image_link = {}
 with open((pwd/"../raid_data/image.json").as_posix(), "r", encoding="utf-8") as f:
     image_link = json.load(f)
+with open((pwd/"../gacha_data/japan/id.json").as_posix(), "r", encoding="utf-8") as f:
+    char_id = json.load(f)
 
 translate = {}
 global_current_raid = {}
@@ -92,10 +95,13 @@ class Commands(commands.Cog):
     async def raid_user_search(self, interaction: discord.Interaction, user: str):
         if global_current_raid:
             found = False
+            count = 0
+            await interaction.response.defer()
             for i in global_current_raid_users:
                 if i["Name"] == user:
                     user_data = i
                     emoji = ''
+                    icon = ''
                     if user_data["Tier"] == 4:
                         emoji = self.bot.get_emoji(1257306020607430659)
                     elif user_data["Tier"] == 3:
@@ -104,13 +110,17 @@ class Commands(commands.Cog):
                         emoji = self.bot.get_emoji(1257307549804400641)
                     elif user_data["Tier"] == 1:
                         emoji = self.bot.get_emoji(1257307548424474675)
+                    for id in char_id:
+                        if id["id"] == user_data["IconId"]:
+                            icon = id["name"]
+                    icon_image = discord.File((pwd/f'../gacha_data/japan/image/{icon}.png').as_posix(), filename=f'{icon}.png')
                     embed = discord.Embed(title=f'{user} 在 {translate[global_name]} 的排名', color=discord.Color.blue())
+                    embed.set_thumbnail(url=f'attachment://{icon}.png')
                     embed.add_field(name="總分", value=f'{user_data["Score"]:,}', inline=False)
                     embed.add_field(name="排名", value=f'{emoji} {user_data["Rank"]}', inline=False)
                     embed.set_footer(text=f'資料更新時間：{global_update_time}')
-                    await interaction.response.send_message(embed=embed)
+                    await interaction.followup.send(embed=embed, file=icon_image)
                     found = True
-                    break
             if not found:
                 await interaction.response.send_message(f"找不到 {user} 的資料")
         else:

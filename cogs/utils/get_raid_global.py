@@ -2,8 +2,8 @@ from pathlib import Path
 import json
 from datetime import datetime
 
-# CURRENT_DATETIME = datetime.strptime("2024-06-18 23:59:59", "%Y-%m-%d %H:%M:%S")
-CURRENT_DATETIME = datetime.now()
+CURRENT_DATETIME = datetime.strptime("2024-06-18 23:59:59", "%Y-%m-%d %H:%M:%S")
+# CURRENT_DATETIME = datetime.now()
 
 pwd = Path(__file__).parent
 
@@ -55,6 +55,7 @@ def update():
                         current_raid_user = {}
                         current_raid_user["AccountId"] = i["AccountId"]
                         current_raid_user["Name"] = i["Nickname"]
+                        current_raid_user["IconId"] = i["RepresentCharacterUniqueId"]
                         current_raid_user["Rank"] = i["Rank"]
                         current_raid_user["Tier"] = i["Tier"]
                         current_raid_user["Score"] = i["BestRankingPoint"]
@@ -117,6 +118,7 @@ def update():
                         current_raid_user = {}
                         current_raid_user["AccountId"] = i["AccountId"]
                         current_raid_user["Name"] = i["Nickname"]
+                        current_raid_user["IconId"] = i["RepresentCharacterUniqueId"]
                         current_raid_user["Rank"] = i["Rank"]
                         current_raid_user["Tier"] = i["Tier"]
                         current_raid_user["Score"] = i["BestRankingPoint"]

@@ -2,8 +2,8 @@ from pathlib import Path
 import json
 from datetime import datetime
 
-CURRENT_DATETIME = datetime.strptime("2024-07-18 23:59:59", "%Y-%m-%d %H:%M:%S")
-# CURRENT_DATETIME = datetime.now()
+# CURRENT_DATETIME = datetime.strptime("2024-06-18 23:59:59", "%Y-%m-%d %H:%M:%S")
+CURRENT_DATETIME = datetime.now()
 
 pwd = Path(__file__).parent
 
@@ -14,18 +14,19 @@ def update():
     ta_user_data = {}
     ga_user_data = {}
     current_raid = {}
+    current_raid_users = []
 
     with open((pwd/"../../raid_data/global/translate.json").as_posix(), "r", encoding="utf-8") as f:
         translated_name = json.load(f)
 
     with open((pwd/"../../raid_data/global/RaidSeasonManageExcelTable.json").as_posix(), "r", encoding="utf-8") as f:
         with open((pwd/"../../raid_data/global/EliminateRaidSeasonManageExcelTable.json").as_posix(), "r", encoding="utf-8") as f2:
-            ta_data = json.load(f)["data"]
-            ga_data = json.load(f2)["data"]
+            ta_data = json.load(f)["Data"]
+            ga_data = json.load(f2)["Data"]
             for i in reversed(ta_data):
                 start_date = datetime.strptime(i["SeasonStartData"], "%Y-%m-%d %H:%M:%S")
                 end_date = datetime.strptime(i["SeasonEndData"], "%Y-%m-%d %H:%M:%S")
-                if start_date < CURRENT_DATETIME and CURRENT_DATETIME < end_date:
+                if start_date < CURRENT_DATETIME and end_date > CURRENT_DATETIME:
                     current_raid["Type"] = "總力戰"
                     current_raid["Season"] = i["SeasonDisplay"]
                     current_raid["Name"] = i["OpenRaidBossGroup"][0].split("_")[0]
@@ -35,7 +36,7 @@ def update():
             for i in reversed(ga_data):
                 start_date = datetime.strptime(i["SeasonStartData"], "%Y-%m-%d %H:%M:%S")
                 end_date = datetime.strptime(i["SeasonEndData"], "%Y-%m-%d %H:%M:%S")
-                if start_date < CURRENT_DATETIME and CURRENT_DATETIME < end_date:
+                if start_date < CURRENT_DATETIME and end_date > CURRENT_DATETIME:
                     current_raid["Type"] = "大決戰"
                     current_raid["Season"] = i["SeasonDisplay"]
                     current_raid["Name"] = i["OpenRaidBossGroup01"].split("_")[0]
@@ -48,6 +49,18 @@ def update():
             with open((pwd/"../../raid_data/global/RaidOpponentList.json").as_posix(), "r", encoding="utf-8") as f:
                 ta_data = json.load(f)
                 ta_user_data = ta_data["OpponentUserDBs"]
+
+                with open((pwd/"../../raid_data/global/current_raid_users.json").as_posix(), "w", encoding="utf-8") as f2:    
+                    for i in ta_user_data:
+                        current_raid_user = {}
+                        current_raid_user["AccountId"] = i["AccountId"]
+                        current_raid_user["Name"] = i["Nickname"]
+                        current_raid_user["Rank"] = i["Rank"]
+                        current_raid_user["Tier"] = i["Tier"]
+                        current_raid_user["Score"] = i["BestRankingPoint"]
+                        current_raid_users.append(current_raid_user)
+                    json.dump(current_raid_users, f2, indent=4, ensure_ascii=False)
+
                 plat_user = [i for i in ta_user_data if i["Tier"] == 4]
                 if plat_user:
                     Platinum = {}
@@ -98,6 +111,21 @@ def update():
             with open((pwd/"../../raid_data/global/EliminateRaidOpponentList.json").as_posix(), "r", encoding="utf-8") as f2:
                 ga_data = json.load(f2)
                 ga_user_data = ga_data["OpponentUserDBs"]
+
+                with open((pwd/"../../raid_data/global/current_raid_users.json").as_posix(), "w", encoding="utf-8") as f2:
+                    for i in ga_user_data:
+                        current_raid_user = {}
+                        current_raid_user["AccountId"] = i["AccountId"]
+                        current_raid_user["Name"] = i["Nickname"]
+                        current_raid_user["Rank"] = i["Rank"]
+                        current_raid_user["Tier"] = i["Tier"]
+                        current_raid_user["Score"] = i["BestRankingPoint"]
+                        current_raid_user["UnarmedScore"] = [value for key, value in i["BossGroupToRankingPoint"].items() if "Unarmed" in key][0]
+                        current_raid_user["HeavyArmorScore"] = [value for key, value in i["BossGroupToRankingPoint"].items() if "HeavyArmor" in key][0]
+                        current_raid_user["LightArmorScore"] = [value for key, value in i["BossGroupToRankingPoint"].items() if "LightArmor" in key][0]
+                        current_raid_users.append(current_raid_user)
+                    json.dump(current_raid_users, f2, indent=4, ensure_ascii=False)
+
                 plat_user = [i for i in ga_user_data if i["Tier"] == 4]
                 if plat_user:
                     Platinum = {}

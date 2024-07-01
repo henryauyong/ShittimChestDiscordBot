@@ -118,6 +118,12 @@ class Commands(commands.Cog):
     @app_commands.command(name='raid-user-search', description='查看指定玩家在當期總力戰/大決戰的排名')
     async def raid_user_search(self, interaction: discord.Interaction, user: str):
         if global_current_raid:
+            global_start_datetime = datetime.strptime(global_start_data, "%Y-%m-%d %H:%M:%S")
+            global_end_datetime = datetime.strptime(global_end_data, "%Y-%m-%d %H:%M:%S")
+            if CURRENT_DATETIME - timedelta(hours=2) <= global_start_datetime:
+                embed = ReadyEmbed("國際服", self.bot)
+                await interaction.response.send_message(embed=embed)
+                return
             found = False
             count = 0
             await interaction.response.defer()

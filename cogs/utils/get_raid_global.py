@@ -109,7 +109,9 @@ def update():
                     Bronze["Name"] = None
                     Bronze["Score"] = None
                     current_raid["Bronze"] = Bronze
-                current_raid["UpdateTime"] = ta_data["timestamp"].split(".")[0].replace("T", " ")
+                temp_time = ta_data["timestamp"].split(".")[0].replace("T", " ")
+                temp_time = datetime.strptime(temp_time, "%Y-%m-%d %H:%M:%S") + timedelta(hours=8)
+                current_raid["UpdateTime"] = temp_time.strftime("%Y-%m-%d %H:%M:%S")
 
         elif current_raid["Type"] == "大決戰":
             with open((pwd/"../../raid_data/global/EliminateRaidOpponentList.json").as_posix(), "r", encoding="utf-8") as f2:
@@ -199,7 +201,9 @@ def update():
                     Bronze["HeavyArmorScore"] = None
                     Bronze["LightArmorScore"] = None
                     current_raid["Bronze"] = Bronze
-                current_raid["UpdateTime"] = ga_data["timestamp"].split(".")[0].replace("T", " ")
+                temp_time = ta_data["timestamp"].split(".")[0].replace("T", " ")
+                temp_time = datetime.strptime(temp_time, "%Y-%m-%d %H:%M:%S") + timedelta(hours=8)
+                current_raid["UpdateTime"] = temp_time.strftime("%Y-%m-%d %H:%M:%S")
                 
     with open((pwd/"../../raid_data/global/current_raid.json").as_posix(), "w", encoding="utf-8") as f3:
         json.dump(current_raid, f3, indent=4, ensure_ascii=False)

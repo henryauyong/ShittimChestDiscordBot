@@ -1,9 +1,14 @@
 from flask import Flask, request
 import json
 from dctoken import *
+import datetime
+import pytz
 
 TOKEN = server_token
 app = Flask(__name__)
+
+timezone = pytz.timezone('Asia/Taipei')
+CURRENT_DATETIME = datetime.datetime.now(timezone).replace(tzinfo=None)
 
 @app.route('/', methods=['POST'])
 def get_raid_data():
@@ -16,7 +21,7 @@ def get_raid_data():
         filename = data['File']
         with open(f'raid_data/{filename}', 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-        print(data)
+        print(f'Updated {filename} at {CURRENT_DATETIME}')
     else:
         result = 'Not JSON Data'
     return result

@@ -30,6 +30,6 @@ async def update_raid_loop():
     await bot.wait_until_ready()
     while not bot.is_closed():
         await bot.get_cog('Update').update_raid()
-        await asyncio.sleep(3600)
+        await asyncio.sleep(1800)
 
 bot.run(token_test)

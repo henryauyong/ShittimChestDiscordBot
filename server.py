@@ -21,7 +21,7 @@ def get_raid_data():
         filename = data['File']
         with open(f'raid_data/global/{filename}', 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-        print(f'Updated {filename} at {CURRENT_DATETIME}')
+        print(f'Updated {filename} at {datetime.datetime.now(timezone).replace(tzinfo=None)}')
     else:
         result = 'Not JSON Data'
     return result

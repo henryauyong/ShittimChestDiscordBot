@@ -207,5 +207,7 @@ def update():
                 
     with open((pwd/"../../raid_data/global/current_raid.json").as_posix(), "w", encoding="utf-8") as f3:
         json.dump(current_raid, f3, indent=4, ensure_ascii=False)
+    
+    print(CURRENT_DATETIME)
 
 update()

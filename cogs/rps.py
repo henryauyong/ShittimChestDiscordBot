@@ -118,6 +118,7 @@ class GameView(discord.ui.View):
 
     async def on_timeout(self):
         try:
+            game_states.pop(self.message.id)
             await self.message.edit(view=None)
         except discord.NotFound:
             pass

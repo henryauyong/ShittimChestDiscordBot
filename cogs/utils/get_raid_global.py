@@ -63,6 +63,9 @@ def update():
                         current_raid_user["Tier"] = i["Tier"]
                         current_raid_user["Score"] = i["BestRankingPoint"]
                         current_raid_users.append(current_raid_user)
+                    data_tuples = [(d['AccountId'], d) for d in current_raid_users]
+                    data_tuples = list(dict(data_tuples).values())
+                    current_raid_users = [dict(t) for t in data_tuples]
                     json.dump(current_raid_users, f2, indent=4, ensure_ascii=False)
 
                 plat_user = [i for i in ta_user_data if i["Tier"] == 4]
@@ -131,6 +134,9 @@ def update():
                         current_raid_user["HeavyArmorScore"] = [value for key, value in i["BossGroupToRankingPoint"].items() if "HeavyArmor" in key][0]
                         current_raid_user["LightArmorScore"] = [value for key, value in i["BossGroupToRankingPoint"].items() if "LightArmor" in key][0]
                         current_raid_users.append(current_raid_user)
+                    data_tuples = [(d['AccountId'], d) for d in current_raid_users]
+                    data_tuples = list(dict(data_tuples).values())
+                    current_raid_users = [dict(t) for t in data_tuples]
                     json.dump(current_raid_users, f2, indent=4, ensure_ascii=False)
 
                 plat_user = [i for i in ga_user_data if i["Tier"] == 4]

@@ -1,6 +1,7 @@
 from discord.ext import commands
 from .utils import get_data_global
 from .utils import get_data_japan
+from .utils import get_raid_global
 from pathlib import Path
 import discord
 
@@ -32,7 +33,18 @@ class Admin(commands.Cog):
             if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
                 get_data_global.update()
                 get_data_japan.update()
+                await self.bot.reload_extension('cogs.gacha')
                 await ctx.send("Updated database manually")
+        except Exception as e:
+            await ctx.send(e)
+
+    @commands.command(name="updateraid", description="手動更新總力資料庫")
+    async def update(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                get_raid_global.update()
+                await self.bot.reload_extension('cogs.raid')
+                await ctx.send("Updated raid database manually")
         except Exception as e:
             await ctx.send(e)
 

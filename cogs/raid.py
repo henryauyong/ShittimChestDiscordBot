@@ -100,9 +100,11 @@ class RaidUserView(discord.ui.View):
     def __init__(self, current_page: int, result_count: int, bot: commands.Bot):
         super().__init__(timeout=60)
         self.message = None
+        self.add_item(self.FirstPageButton(current_page))
         self.add_item(self.PreviousPageButton(current_page))
         self.add_item(self.PageNumberButton(current_page, result_count))
         self.add_item(self.NextPageButton(current_page, result_count))
+        self.add_item(self.LastPageButton(current_page, result_count))
     
     async def on_timeout(self):
         try:
@@ -112,6 +114,24 @@ class RaidUserView(discord.ui.View):
             pass
         except AttributeError:
             pass
+
+    class FirstPageButton(discord.ui.Button):
+        def __init__(self, current_page: int):
+            if current_page == 1:
+                super().__init__(style=discord.ButtonStyle.primary, label="⏮️", row=1, disabled=True)
+            else:
+                super().__init__(style=discord.ButtonStyle.primary, label="⏮️", row=1)
+        async def callback(self, interaction: discord.Interaction):
+            messgae = interaction.message
+            message_id = messgae.id
+            current_page = message_state[message_id]["current_page"]
+            total_page = message_state[message_id]["total_page"]
+            embeds = message_state[message_id]["embeds"]
+            if current_page > 1:
+                current_page = 1
+                new_view = RaidUserView(current_page, total_page, interaction.user.bot)
+                await interaction.response.edit_message(embed=embeds[current_page-1], view=new_view)
+                message_state[message_id]["current_page"] = current_page
 
     class PreviousPageButton(discord.ui.Button):
         def __init__(self, current_page: int):
@@ -151,6 +171,24 @@ class RaidUserView(discord.ui.View):
             embeds = message_state[message_id]["embeds"]
             if current_page < total_page:
                 current_page += 1
+                new_view = RaidUserView(current_page, total_page, interaction.user.bot)
+                await interaction.response.edit_message(embed=embeds[current_page-1], view=new_view)
+                message_state[message_id]["current_page"] = current_page
+
+    class LastPageButton(discord.ui.Button):
+        def __init__(self, current_page: int, total_page: int):
+            if current_page == total_page:
+                super().__init__(style=discord.ButtonStyle.primary, label="⏭️", row=1, disabled=True)
+            else:
+                super().__init__(style=discord.ButtonStyle.primary, label="⏭️", row=1)
+        async def callback(self, interaction: discord.Interaction):
+            messgae = interaction.message
+            message_id = messgae.id
+            current_page = message_state[message_id]["current_page"]
+            total_page = message_state[message_id]["total_page"]
+            embeds = message_state[message_id]["embeds"]
+            if current_page < total_page:
+                current_page = total_page
                 new_view = RaidUserView(current_page, total_page, interaction.user.bot)
                 await interaction.response.edit_message(embed=embeds[current_page-1], view=new_view)
                 message_state[message_id]["current_page"] = current_page

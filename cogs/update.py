@@ -19,11 +19,6 @@ class Update(commands.Cog):
         get_data_japan.update()
         await self.bot.reload_extension('cogs.gacha')
         print(f"Updated gacha data at {datetime.datetime.now(timezone)}")
-
-    async def update_raid(self):
-        get_raid_global.update()
-        await self.bot.reload_extension('cogs.raid')
-        print(f"Updated raid data at {datetime.datetime.now(timezone)}")
     
 async def setup(bot):
     await bot.add_cog(Update(bot))

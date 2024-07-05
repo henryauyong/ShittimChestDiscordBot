@@ -354,6 +354,3 @@ def update():
         json.dump(current_raid, f3, indent=4, ensure_ascii=False)
 
     print(CURRENT_DATETIME)
-
-
-update()

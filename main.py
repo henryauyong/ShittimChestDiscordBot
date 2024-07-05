@@ -18,18 +18,11 @@ async def on_ready():
     print(f'Logged in as {bot.user.name} - {bot.user.id}')
     print('------')
     asyncio.create_task(update_gacha_loop())
-    asyncio.create_task(update_raid_loop())
 
 async def update_gacha_loop():
     await bot.wait_until_ready()
     while not bot.is_closed():
         await bot.get_cog('Update').update_gacha()
         await asyncio.sleep(86400)
-
-async def update_raid_loop():
-    await bot.wait_until_ready()
-    while not bot.is_closed():
-        await bot.get_cog('Update').update_raid()
-        await asyncio.sleep(1800)
 
 bot.run(token_test)

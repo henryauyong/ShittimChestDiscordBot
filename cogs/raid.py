@@ -432,7 +432,7 @@ class Commands(commands.Cog):
                 color=discord.Color.red(),
             )
             embed.set_footer(
-                text=f"資料更新時間：{str(CURRENT_DATETIME).split('.')[0]}"
+                text=f"資料更新時間：{str(datetime.now(timezone).replace(tzinfo=None)).split('.')[0]}"
             )
             embed.set_thumbnail(url=image_link["Arona_peace"])
             await interaction.response.send_message(embed=embed)

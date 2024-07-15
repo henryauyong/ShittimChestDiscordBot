@@ -46,7 +46,7 @@ def insert(data: json):
                 values[1:] + values[:1],
             )
         current_time_list = []
-        current_time = str(datetime.now(timezone).replace(tzinfo=None)).split('.')[0]
+        current_time = str(datetime.now(timezone).replace(tzinfo=None)).split(".")[0]
         current_time_list.append(current_time)
         print(current_time_list)
         print(type(current_time_list))
@@ -55,7 +55,7 @@ def insert(data: json):
             UPDATE raid_update_time
             SET update_time = ?
             """,
-            current_time_list
+            current_time_list,
         )
         con.commit()
         con.close()
@@ -94,6 +94,63 @@ def insert(data: json):
             )
         con.commit()
         con.close()
+    elif protocol == "EliminateRaid_OpponentList":
+        con = sqlite3.connect("./raid_data/global_raid.db")
+        cur = con.cursor()
+        data = json.loads(data["packet"])
+        current_raid_users = data["OpponentUserDBs"]
+        for user in current_raid_users:
+            account_id = user["AccountId"]
+            name = user["Nickname"]
+            icon_id = user["RepresentCharacterUniqueId"]
+            rank = user["Rank"]
+            tier = user["Tier"]
+            score = user["BestRankingPoint"]
+            unarmed_score = [
+                value
+                for key, value in user["BossGroupToRankingPoint"].items()
+                if "Unarmed" in key
+            ][0]
+            heavy_armor_score = [
+                value
+                for key, value in user["BossGroupToRankingPoint"].items()
+                if "HeavyArmor" in key
+            ][0]
+            light_armor_score = [
+                value
+                for key, value in user["BossGroupToRankingPoint"].items()
+                if "LightArmor" in key
+            ][0]
+            values = [account_id, name, icon_id, rank, tier, score, unarmed_score, heavy_armor_score, light_armor_score]
+            cur.execute(
+                """
+                INSERT OR IGNORE INTO eliminate_raid_opponent_list 
+                (account_id, name, icon_id, rank, tier, score, unarmed_score, heavy_armor_score, light_armor_score)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                values,
+            )
+            cur.execute(
+                """
+                UPDATE eliminate_raid_opponent_list 
+                SET name = ?, icon_id = ?, rank = ?, tier = ?, score = ?, unarmed_score = ?, heavy_armor_score = ?, light_armor_score = ?
+                WHERE account_id = ?;
+                """,
+                values[1:] + values[:1],
+            )
+        current_time_list = []
+        current_time = str(datetime.now(timezone).replace(tzinfo=None)).split(".")[0]
+        current_time_list.append(current_time)
+        print(current_time_list)
+        print(type(current_time_list))
+        cur.execute(
+            """
+            UPDATE raid_update_time
+            SET update_time = ?
+            """,
+            current_time_list,
+        )
+        con.commit()
     elif protocol == "EliminateRaidSeasonManageExcelTable.json":
         con = sqlite3.connect("./raid_data/global_raid.db")
         cur = con.cursor()

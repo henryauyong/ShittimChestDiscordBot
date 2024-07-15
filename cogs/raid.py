@@ -8,12 +8,14 @@ import pytz
 from datetime import timedelta
 from datetime import datetime
 import sqlite3
+from cogs.utils import raid_db
+
 
 pwd = Path(__file__).parent
 
 timezone = pytz.timezone("Asia/Taipei")
-CURRENT_DATETIME = datetime.now(timezone).replace(tzinfo=None)
-# CURRENT_DATETIME = datetime.strptime("2024-07-02 09:59:00", "%Y-%m-%d %H:%M:%S")
+# CURRENT_DATETIME = datetime.now(timezone).replace(tzinfo=None)
+CURRENT_DATETIME = datetime.strptime("2024-07-02 10:59:00", "%Y-%m-%d %H:%M:%S")
 
 message_state = {}
 
@@ -33,79 +35,71 @@ with open(
 
 
 class RaidLineEmbed(discord.Embed):
-    def __init__(self, server: str, type: str, season: int, name: str, start_date: datetime, end_date: datetime, update_time:str, bot: commands.Bot):
-        plat_emoji = bot.get_emoji(1257306020607430659)
-        gold_emoji = bot.get_emoji(1257307551213686857)
-        silver_emoji = bot.get_emoji(1257307549804400641)
-        bronze_emoji = bot.get_emoji(1257307548424474675)
-
-        con = sqlite3.connect((pwd / f"../raid_data/{server}_raid.db").as_posix())
-        cur = con.cursor()
-        score_data = []
-        for i in range(1, 5):
-            result = cur.execute(
-            f"""
-            SELECT r1.name, r1.score
-            FROM {type}_opponent_list r1
-            JOIN (
-                SELECT MIN(rank) as min_rank
-                FROM raid_opponent_list
-                WHERE tier = ?
-            ) r2
-            ON r1.rank = r2.min_rank
-            WHERE r1.tier = ?;
-            """,
-            [i, i]
-            )
-            score_data.append(result.fetchall())
-        plat_score = list(score_data[3][0])[1]
-        plat_name = list(score_data[3][0])[0]
-        if plat_score:
-            plat_score = f"{plat_score:,}"
-        else:
-            plat_name = "_無_"
-            plat_score = "_無_"
-        gold_score = list(score_data[2][0])[1]
-        gold_name = list(score_data[2][0])[0]
-        if gold_score:
-            gold_score = f"{gold_score:,}"
-        else:
-            gold_name = "_無_"
-            gold_score = "_無_"
-        silver_score = list(score_data[1][0])[1]
-        silver_name = list(score_data[1][0])[0]
-        if silver_score:
-            silver_score = f"{silver_score:,}"
-        else:
-            silver_name = "_無_"
-            silver_score = "_無_"
-
+    def __init__(self, server: str, current_raid: dict, bot: commands.Bot):
         super().__init__(
-            title=f"{translate[server]} 第{season}期{translate[type]} {translate[name]}",
-            description=f"{str(start_date)} - {str(end_date)}",
+            title=f"{translate[server]} 第{current_raid['season']}期{translate[current_raid['type']]} {translate[current_raid['name']]}",
+            description=f"{str(current_raid['start_date'])} - {str(current_raid['end_date'])}",
             color=discord.Color.blue(),
         )
-        self.set_thumbnail(url=image_link[name])
-        self.add_field(
-            name=f"{plat_emoji} 第一名：{plat_name}",
-            value=f"分數：{plat_score}",
-            inline=False,
+        self.set_thumbnail(url=image_link[current_raid["name"]])
+        self.set_footer(text=f"資料更新時間：{current_raid['update_time']}")
+
+        emojis = {
+            "plat": bot.get_emoji(1257306020607430659),
+            "gold": bot.get_emoji(1257307551213686857),
+            "silver": bot.get_emoji(1257307549804400641),
+        }
+
+        score_data = raid_db.get_highest_rank_user_each_tier(
+            server, current_raid["type"]
         )
-        self.add_field(
-            name=f"{gold_emoji} 第一名：{gold_name}",
-            value=f"分數：{gold_score}",
-            inline=False,
-        )
-        self.add_field(
-            name=f"{silver_emoji} 第一名：{silver_name}",
-            value=f"分數：{silver_score}",
-            inline=False,
-        )
-        self.set_footer(text=f"資料更新時間：{update_time}")
+
+        for tier, emoji in emojis.items():
+            tier_data = score_data[tier]
+            name, score = self.format_score(
+                tier_data.get("name"), tier_data.get("score")
+            )
+            if current_raid["type"] == "raid":
+                self.add_field(
+                    name=f"{emoji} 第一名：{name}", value=f"分數：{score}", inline=False
+                )
+            elif current_raid["type"] == "eliminate_raid":
+                # Mapping of display names to actual keys
+                categories = {
+                    "輕裝甲": "light_armor_score",
+                    "重裝甲": "heavy_armor_score",
+                    "神祕裝甲": "unarmed_score",
+                }
+                details = "\n".join(
+                    [
+                        f"{display_name}: {self.format_score('', tier_data.get(actual_key))[1]}"
+                        for display_name, actual_key in categories.items()
+                    ]
+                )
+                self.add_field(
+                    name=f"{emoji} 第一名：{name}",
+                    value=f"總分：{score}\n{details}",
+                    inline=False,
+                )
+
+    def format_score(self, name, score):
+        if score:
+            score = int(score)
+            return name, f"{score:,}"
+        return "_無_", "_無_"
 
 
 class ReadyEmbed(discord.Embed):
-    def __init__(self, server: str, type: str, season: int, name: str, start_date: datetime, end_date: datetime, bot: commands.Bot):
+    def __init__(
+        self,
+        server: str,
+        current_raid: dict,
+    ):
+        type = current_raid["type"]
+        season = current_raid["season"]
+        name = current_raid["name"]
+        start_date = current_raid["start_date"]
+        end_date = current_raid["end_date"]
         super().__init__(
             title=f"{translate[server]} 第{season}期{translate[type]} {translate[name]}",
             description=f"{str(start_date)} - {str(end_date)}",
@@ -113,7 +107,9 @@ class ReadyEmbed(discord.Embed):
         )
         self.set_thumbnail(url=image_link[name])
         self.add_field(name="正在準備資料", value="", inline=False)
-        self.set_footer(text=f"資料更新時間：{str(datetime.now(timezone).replace(tzinfo=None)).split('.')[0]}")
+        self.set_footer(
+            text=f"資料更新時間：{str(datetime.now(timezone).replace(tzinfo=None)).split('.')[0]}"
+        )
 
 
 class RaidUserView(discord.ui.View):
@@ -240,13 +236,15 @@ class RaidUserView(discord.ui.View):
                 message_state[message_id]["current_page"] = current_page
 
 
-def raid_user_embed(user_data: list, global_name:str, global_update_time:str, bot: commands.Bot):
+def raid_user_embed(
+    type: str, user_data: dict, raid_name: str, update_time: str, bot: commands.Bot
+):
     emoji = ""
-    name = user_data[0]
-    icon_id = user_data[1]
-    rank = user_data[2]
-    tier = user_data[3]
-    score = user_data[4]
+    name = user_data.get("name")
+    icon_id = user_data.get("icon_id")
+    rank = user_data.get("rank")
+    tier = user_data.get("tier")
+    score = user_data.get("score")
     if tier == 4:
         emoji = bot.get_emoji(1257306020607430659)
     elif tier == 3:
@@ -255,114 +253,30 @@ def raid_user_embed(user_data: list, global_name:str, global_update_time:str, bo
         emoji = bot.get_emoji(1257307549804400641)
     elif tier == 1:
         emoji = bot.get_emoji(1257307548424474675)
+
+    if type == "eliminate_raid":
+        unarmed_score = user_data.get("unarmed_score")
+        heavy_armor_score = user_data.get("heavy_armor_score")
+        light_armor_score = user_data.get("light_armor_score")
     embed = discord.Embed(
-        title=f"{name} 在 {translate[global_name]} 的排名",
+        title=f"{name} 在 {translate[raid_name]} 的排名",
         color=discord.Color.blue(),
     )
     embed.set_thumbnail(
         url=f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{icon_id}.webp"
     )
-    embed.add_field(name="總分", value=f"{score:,}", inline=False)
+    if type == "raid":
+        embed.add_field(name="分數", value=f"{score:,}", inline=False)
+    elif type == "eliminate_raid":
+        embed.add_field(name="總分", value=f"{score:,}", inline=False)
+        embed.add_field(name="輕裝甲", value=f"{light_armor_score:,}", inline=False)
+        embed.add_field(name="重裝甲", value=f"{heavy_armor_score:,}", inline=False)
+        embed.add_field(name="神祕裝甲", value=f"{unarmed_score:,}", inline=False)
+
     embed.add_field(name="排名", value=f"{emoji} {rank}", inline=False)
-    embed.set_footer(text=f"資料更新時間：{global_update_time}")
+    embed.set_footer(text=f"資料更新時間：{update_time}")
     return embed
 
-def check_current_raid(server: str):
-    con = sqlite3.connect((pwd / f"../raid_data/{server}_raid.db").as_posix())
-    cur = con.cursor()
-    ta_results = cur.execute(
-    """
-    SELECT start_data, end_data
-    FROM raid_season_manage_excel_table
-    ORDER BY season_id DESC
-    LIMIT 5;
-    """
-    )
-    ta_results = ta_results.fetchall()
-    for result in ta_results:
-        result = list(result)
-        start_date = datetime.strptime(result[0], "%Y-%m-%d %H:%M:%S")
-        end_date = datetime.strptime(result[1], "%Y-%m-%d %H:%M:%S")
-        current_date = datetime.now(timezone).replace(tzinfo=None)
-        if start_date < current_date and current_date < end_date:
-            if current_date - timedelta(hours=2) <= start_date:
-                con.close()
-                return "Ready"
-            con.close()
-            return "True"
-    ga_results = cur.execute(
-    """
-    SELECT start_data, end_data
-    FROM eliminate_raid_season_manage_excel_table
-    ORDER BY season_id DESC
-    LIMIT 5;
-    """
-    )
-    ga_results = ga_results.fetchall()
-    for result in ga_results:
-        result = list(result)
-        start_date = datetime.strptime(result[0], "%Y-%m-%d %H:%M:%S")
-        end_date = datetime.strptime(result[1], "%Y-%m-%d %H:%M:%S")
-        current_date = datetime.now(timezone).replace(tzinfo=None)
-        if start_date < current_date and current_date < end_date:
-            if current_date - timedelta(hours=2) <= start_date:
-                con.close()
-                return "Ready"
-            con.close()
-            return "True"
-    con.close()
-    return "False"
-
-def get_current_raid(server:str):
-    con = sqlite3.connect((pwd / f"../raid_data/{server}_raid.db").as_posix())
-    cur = con.cursor()
-    ta_results = cur.execute(
-    """
-    SELECT season_display, name, start_data, end_data
-    FROM raid_season_manage_excel_table
-    ORDER BY season_id DESC
-    LIMIT 5;
-    """
-    )
-    ta_results = ta_results.fetchall()
-    update_time = cur.execute(
-    """
-    SELECT update_time
-    FROM raid_update_time
-    """
-    )
-    update_time = list(update_time.fetchall()[0])[0]
-    for result in ta_results:
-        result = list(result)
-        start_date = datetime.strptime(result[2], "%Y-%m-%d %H:%M:%S")
-        end_date = datetime.strptime(result[3], "%Y-%m-%d %H:%M:%S")
-        current_date = datetime.now(timezone).replace(tzinfo=None)
-        if start_date < current_date and current_date < end_date:
-            season_display = result[0]
-            name = result[1]
-            con.close()
-            return "raid", season_display, name, start_date, end_date, update_time
-    ga_results = cur.execute(
-    """
-    SELECT season_display, name, start_data, end_data
-    FROM eliminate_raid_season_manage_excel_table
-    ORDER BY season_id DESC
-    LIMIT 5;
-    """
-    )
-    ga_results = ga_results.fetchall()
-    for result in ga_results:
-        result = list(result)
-        start_date = datetime.strptime(result[2], "%Y-%m-%d %H:%M:%S")
-        end_date = datetime.strptime(result[3], "%Y-%m-%d %H:%M:%S")
-        current_date = datetime.now(timezone).replace(tzinfo=None)
-        if start_date < current_date and current_date < end_date:
-            season_display = result[0]
-            name = result[1]
-            con.close()
-            return "eliminate_raid", season_display, name, start_date, end_date, update_time
-    con.close()
-    return None
 
 class Commands(commands.Cog):
     def __init__(self, bot):
@@ -370,13 +284,22 @@ class Commands(commands.Cog):
 
     @app_commands.command(name="raid-line", description="查看當期總力戰/大決戰檔線")
     async def raid(self, interaction: discord.Interaction):
-        if check_current_raid("global") == "True":
-            type, season_display, name, start_date, end_date, update_time = get_current_raid("global")
-            embed = RaidLineEmbed("global", type, season_display, name, start_date, end_date, update_time, self.bot)
+        status = raid_db.check_current_raid("global")
+        if status == "True":
+            current_raid = raid_db.get_current_raid("global")
+            embed = RaidLineEmbed(
+                "global",
+                current_raid,
+                self.bot,
+            )
             await interaction.response.send_message(embed=embed)
-        elif check_current_raid("global") == "Ready":
-            type, season_display, name, start_date, end_date = get_current_raid("global")
-            embed = ReadyEmbed
+        elif status == "Ready":
+            current_raid = raid_db.get_current_raid("global")
+            embed = ReadyEmbed(
+                "global",
+                current_raid,
+            )
+            await interaction.response.send_message(embed=embed)
         else:
             embed = discord.Embed(
                 title="奇普托斯目前爲和平狀態", color=discord.Color.red()
@@ -391,19 +314,19 @@ class Commands(commands.Cog):
         name="raid-user-search", description="查看指定玩家在當期總力戰/大決戰的排名"
     )
     async def raid_user_search(self, interaction: discord.Interaction, user: str):
-        if check_current_raid("global") == "True":
-            type, season_display, name, start_date, end_date, update_time = get_current_raid("global")
+        status = raid_db.check_current_raid("global")
+        if status == "True":
+            current_raid = raid_db.get_current_raid("global")
+            name = current_raid["name"]
+            type = current_raid["type"]
+            update_time = current_raid["update_time"]
             raid_user_embeds = []
-            con = sqlite3.connect((pwd / "../raid_data/global_raid.db").as_posix())
-            cur = con.cursor()
-
-            results = cur.execute(
-                "SELECT name, icon_id, rank, tier, score FROM raid_opponent_list WHERE name = ?",
-                (user,),
-            ).fetchall()
+            results = raid_db.get_all_users_rank_by_name("global", type, user)
             result_count = len(results)
             for result in results:
-                raid_user_embeds.append(raid_user_embed(list(result), name, update_time, self.bot))
+                raid_user_embeds.append(
+                    raid_user_embed(type, result, name, update_time, self.bot)
+                )
 
             if result_count == 1:
                 await interaction.response.send_message(embed=raid_user_embeds[0])
@@ -425,6 +348,13 @@ class Commands(commands.Cog):
                 )
                 embed.set_footer(text=f"資料更新時間：{update_time}")
                 await interaction.response.send_message(embed=embed)
+        elif status == "Ready":
+            current_raid = raid_db.get_current_raid("global")
+            embed = ReadyEmbed(
+                "global",
+                current_raid,
+            )
+            await interaction.response.send_message(embed=embed)
         else:
             embed = discord.Embed(
                 title="奇普托斯目前爲和平狀態",

@@ -85,7 +85,7 @@ def check_current_raid(server: str):
         start_date = datetime.strptime(result[0], "%Y-%m-%d %H:%M:%S")
         end_date = datetime.strptime(result[1], "%Y-%m-%d %H:%M:%S")
         current_date = datetime.now(timezone).replace(tzinfo=None)
-        if start_date < current_date and current_date < end_date:
+        if start_date < current_date and current_date < end_date + timedelta(days=7):
             if current_date - timedelta(hours=2) <= start_date:
                 con.close()
                 return "Ready"
@@ -104,7 +104,7 @@ def check_current_raid(server: str):
         start_date = datetime.strptime(result[0], "%Y-%m-%d %H:%M:%S")
         end_date = datetime.strptime(result[1], "%Y-%m-%d %H:%M:%S")
         current_date = datetime.now(timezone).replace(tzinfo=None)
-        if start_date < current_date and current_date < end_date:
+        if start_date < current_date and current_date < end_date + timedelta(days=7):
             if current_date - timedelta(hours=2) <= start_date:
                 con.close()
                 return "Ready"
@@ -138,7 +138,7 @@ def get_current_raid(server: str):
         start_date = datetime.strptime(result[2], "%Y-%m-%d %H:%M:%S")
         end_date = datetime.strptime(result[3], "%Y-%m-%d %H:%M:%S")
         current_date = datetime.now(timezone).replace(tzinfo=None)
-        if start_date < current_date and current_date < end_date:
+        if start_date < current_date and current_date < end_date + timedelta(days=7):
             season_display = result[0]
             name = result[1]
             con.close()
@@ -164,7 +164,7 @@ def get_current_raid(server: str):
         start_date = datetime.strptime(result[2], "%Y-%m-%d %H:%M:%S")
         end_date = datetime.strptime(result[3], "%Y-%m-%d %H:%M:%S")
         current_date = datetime.now(timezone).replace(tzinfo=None)
-        if start_date < current_date and current_date < end_date:
+        if start_date < current_date and current_date < end_date + timedelta(days=7):
             season_display = result[0]
             name = result[1]
             con.close()

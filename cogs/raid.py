@@ -54,15 +54,35 @@ class RaidLineEmbed(discord.Embed):
             server, current_raid["type"]
         )
 
+        # normal, hard, veryhard, hardcore, extreme, insane, torment
+        difficulty_scores = {
+            "normal": 0, 
+            "hard": 1000000, 
+            "veryhard": 2000000, 
+            "hardcore": 4000000, 
+            "extreme": 8000000, 
+            "insane": 16000000, 
+            "torment": 30000000
+        }
+
+        difficulty_count = raid_db.get_difficulty_count(server, current_raid["type"], difficulty_scores)
+        self.description += f"\n\nTORMENT 通關人數：{difficulty_count[1]} 人\nINSANE 通關人數：{difficulty_count[0]} 人"
+
         for tier, emoji in emojis.items():
             tier_data = score_data[tier]
-            name, score = self.format_score(
+            name, fscore = self.format_score(
                 tier_data.get("name"), tier_data.get("score")
             )
+            score = tier_data.get("score")
             if current_raid["type"] == "raid":
-                self.add_field(
-                    name=f"{emoji} 第一名：{name}", value=f"分數：{score}", inline=False
-                )
+                for difficulty_score in reversed(difficulty_scores):
+                    if score >= difficulty_scores[difficulty_score]:
+                        self.add_field(
+                            name=f"{emoji} 第一名：{name}",
+                            value=f"分數：{fscore} ({difficulty_score})",
+                            inline=False,
+                        )
+                        break
             elif current_raid["type"] == "eliminate_raid":
                 # Mapping of display names to actual keys
                 categories = {
@@ -78,7 +98,7 @@ class RaidLineEmbed(discord.Embed):
                 )
                 self.add_field(
                     name=f"{emoji} 第一名：{name}",
-                    value=f"總分：{score}\n{details}",
+                    value=f"總分：{fscore}\n{details}",
                     inline=False,
                 )
 

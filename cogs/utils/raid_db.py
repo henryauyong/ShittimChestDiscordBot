@@ -222,3 +222,28 @@ def get_all_users_rank_by_name(server: str, type: str, name: str):
             )
     con.close()
     return return_data
+
+def get_difficulty_count(server: str, type: str, difficulty_scores: dict):
+    con = sqlite3.connect((pwd / f"../../raid_data/{server}_raid.db").as_posix())
+    cur = con.cursor()
+    query = """
+            SELECT COUNT(*)
+            FROM {table_name}
+            WHERE score >= ? AND score <= ?;
+            """
+    table_name = (
+        "eliminate_raid_opponent_list" if type != "raid" else "raid_opponent_list"
+    )
+    return_data = []
+    insane_count = cur.execute(
+        query.format(table_name=table_name), [difficulty_scores["insane"], difficulty_scores["torment"]]
+    ).fetchall()
+    torment_count = cur.execute(
+        query.format(table_name=table_name), [difficulty_scores["torment"], 999999999]
+    ).fetchall()
+    return_data.append(list(insane_count[0])[0])
+    return_data.append(list(torment_count[0])[0])
+
+    con.close()
+
+    return return_data

@@ -21,6 +21,7 @@ def insert(data: json):
         cur = con.cursor()
         data = json.loads(data["packet"])
         current_raid_users = data["OpponentUserDBs"]
+        rank_bracket = 0
         score_bracket = 0
         for user in current_raid_users:
             account_id = user["AccountId"]
@@ -29,6 +30,7 @@ def insert(data: json):
             rank = user["Rank"]
             tier = user["Tier"]
             score = user["BestRankingPoint"]
+            rank_bracket = rank
             score_bracket = score
             values = [account_id, name, icon_id, rank, tier, score]
             cur.execute(
@@ -57,7 +59,7 @@ def insert(data: json):
             """,
             current_time_list,
         )
-        print(score_bracket)
+        print(f"{rank_bracket}: {score_bracket}")
         con.commit()
         con.close()
     elif protocol == "RaidSeasonManageExcelTable.json":
@@ -100,6 +102,7 @@ def insert(data: json):
         cur = con.cursor()
         data = json.loads(data["packet"])
         current_raid_users = data["OpponentUserDBs"]
+        rank_bracket = 0
         score_bracket = 0
         for user in current_raid_users:
             account_id = user["AccountId"]
@@ -108,6 +111,7 @@ def insert(data: json):
             rank = user["Rank"]
             tier = user["Tier"]
             score = user["BestRankingPoint"]
+            rank_bracket = rank
             score_bracket = score
             unarmed_score = [
                 value
@@ -161,7 +165,7 @@ def insert(data: json):
             """,
             current_time_list,
         )
-        print(score_bracket)
+        print(f"{rank_bracket}: {score_bracket}")
         con.commit()
         con.close()
 

@@ -56,16 +56,18 @@ class RaidLineEmbed(discord.Embed):
 
         # normal, hard, veryhard, hardcore, extreme, insane, torment
         difficulty_scores = {
-            "normal": 0, 
-            "hard": 1000000, 
-            "veryhard": 2000000, 
-            "hardcore": 4000000, 
-            "extreme": 8000000, 
-            "insane": 16000000, 
-            "torment": 30000000
+            "normal": 0,
+            "hard": 1000000,
+            "veryhard": 2000000,
+            "hardcore": 4000000,
+            "extreme": 8000000,
+            "insane": 16000000,
+            "torment": 30000000,
         }
 
-        difficulty_count = raid_db.get_difficulty_count(server, current_raid["type"], difficulty_scores)
+        difficulty_count = raid_db.get_difficulty_count(
+            server, current_raid["type"], difficulty_scores
+        )
         self.description += f"\n\nTORMENT 通關人數：{difficulty_count[1]} 人\nINSANE 通關人數：{difficulty_count[0]} 人"
 
         for tier, emoji in emojis.items():

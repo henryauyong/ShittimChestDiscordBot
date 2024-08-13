@@ -2,6 +2,7 @@ from discord.ext import commands
 from .utils import get_data_global
 from .utils import get_data_japan
 from .utils import get_raid_global
+from .utils import raid_db
 from pathlib import Path
 import discord
 
@@ -38,16 +39,6 @@ class Admin(commands.Cog):
         except Exception as e:
             await ctx.send(e)
 
-    @commands.command(name="updateraid", description="手動更新總力資料庫")
-    async def update(self, ctx:commands.Context):
-        try:
-            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
-                get_raid_global.update()
-                await self.bot.reload_extension('cogs.raid')
-                await ctx.send("Updated raid database manually")
-        except Exception as e:
-            await ctx.send(e)
-
     @commands.command(name="sync", description="")
     async def sync(self, ctx:commands.Context):
         try:
@@ -65,6 +56,42 @@ class Admin(commands.Cog):
             if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
                 synced = await self.bot.tree.sync()
                 await ctx.send(f"{len(synced)} Commands synced")
+        except Exception as e:
+            await ctx.send(e)
+    
+    @commands.command(name="resetglta", description="")
+    async def resetglta(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                raid_db.delete_data("global", "raid")
+                await ctx.send("Reset global raid data")
+        except Exception as e:
+            await ctx.send(e)
+    
+    @commands.command(name="resetglga", description="")
+    async def resetglga(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                raid_db.delete_data("global", "eliminate_raid")
+                await ctx.send("Reset global eliminate raid data")
+        except Exception as e:
+            await ctx.send(e)
+    
+    @commands.command(name="resetjpta", description="")
+    async def resetjpta(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                raid_db.delete_data("japan", "raid")
+                await ctx.send("Reset japan raid data")
+        except Exception as e:
+            await ctx.send(e)
+    
+    @commands.command(name="resetjpga", description="")
+    async def resetjpga(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                raid_db.delete_data("japan", "eliminate_raid")
+                await ctx.send("Reset japan eliminate raid data")
         except Exception as e:
             await ctx.send(e)
         

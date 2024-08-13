@@ -16,8 +16,10 @@ def insert(data: json):
     protocol = data["protocol"]
     if protocol == "Error":
         return
-    elif protocol == "Raid_OpponentList":
-        con = sqlite3.connect("./raid_data/global_raid.db")
+    elif protocol in ["Raid_OpponentList", "JP_Raid_OpponentList"]:
+        con = sqlite3.connect(
+            f"./raid_data/{'global' if protocol == 'Raid_OpponentList' else 'japan'}_raid.db"
+        )
         cur = con.cursor()
         data = json.loads(data["packet"])
         current_raid_users = data["OpponentUserDBs"]
@@ -62,8 +64,13 @@ def insert(data: json):
         print(f"{rank_bracket}: {score_bracket}")
         con.commit()
         con.close()
-    elif protocol == "RaidSeasonManageExcelTable.json":
-        con = sqlite3.connect("./raid_data/global_raid.db")
+    elif protocol in [
+        "RaidSeasonManageExcelTable.json",
+        "JP_RaidSeasonManageExcelTable.json",
+    ]:
+        con = sqlite3.connect(
+            f"./raid_data/{'global' if protocol == 'RaidSeasonManageExcelTable.json' else 'japan'}_raid.db"
+        )
         cur = con.cursor()
         raids = data["Data"]
         for raid in raids:
@@ -97,8 +104,10 @@ def insert(data: json):
             )
         con.commit()
         con.close()
-    elif protocol == "EliminateRaid_OpponentList":
-        con = sqlite3.connect("./raid_data/global_raid.db")
+    elif protocol in ["EliminateRaid_OpponentList", "JP_EliminateRaid_OpponentList"]:
+        con = sqlite3.connect(
+            f"./raid_data/{'global' if protocol == 'EliminateRaid_OpponentList' else 'japan'}_raid.db"
+        )
         cur = con.cursor()
         data = json.loads(data["packet"])
         current_raid_users = data["OpponentUserDBs"]
@@ -117,17 +126,26 @@ def insert(data: json):
                 value
                 for key, value in user["BossGroupToRankingPoint"].items()
                 if "Unarmed" in key
-            ][0]
+            ]
+            unarmed_score = unarmed_score[0] if unarmed_score else None
             heavy_armor_score = [
                 value
                 for key, value in user["BossGroupToRankingPoint"].items()
                 if "HeavyArmor" in key
-            ][0]
+            ]
+            heavy_armor_score = heavy_armor_score[0] if heavy_armor_score else None
             light_armor_score = [
                 value
                 for key, value in user["BossGroupToRankingPoint"].items()
                 if "LightArmor" in key
-            ][0]
+            ]
+            light_armor_score = light_armor_score[0] if light_armor_score else None
+            elastic_armor_score = [
+                value
+                for key, value in user["BossGroupToRankingPoint"].items()
+                if "ElasticArmor" in key
+            ]
+            elastic_armor_score = elastic_armor_score[0] if elastic_armor_score else None
             values = [
                 account_id,
                 name,
@@ -138,19 +156,20 @@ def insert(data: json):
                 unarmed_score,
                 heavy_armor_score,
                 light_armor_score,
+                elastic_armor_score,
             ]
             cur.execute(
                 """
                 INSERT OR IGNORE INTO eliminate_raid_opponent_list 
-                (account_id, name, icon_id, rank, tier, score, unarmed_score, heavy_armor_score, light_armor_score)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                (account_id, name, icon_id, rank, tier, score, unarmed_score, heavy_armor_score, light_armor_score, elastic_armor_score)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """,
                 values,
             )
             cur.execute(
                 """
                 UPDATE eliminate_raid_opponent_list 
-                SET name = ?, icon_id = ?, rank = ?, tier = ?, score = ?, unarmed_score = ?, heavy_armor_score = ?, light_armor_score = ?
+                SET name = ?, icon_id = ?, rank = ?, tier = ?, score = ?, unarmed_score = ?, heavy_armor_score = ?, light_armor_score = ?, elastic_armor_score = ?
                 WHERE account_id = ?;
                 """,
                 values[1:] + values[:1],
@@ -169,8 +188,13 @@ def insert(data: json):
         con.commit()
         con.close()
 
-    elif protocol == "EliminateRaidSeasonManageExcelTable.json":
-        con = sqlite3.connect("./raid_data/global_raid.db")
+    elif protocol in [
+        "EliminateRaidSeasonManageExcelTable.json",
+        "JP_EliminateRaidSeasonManageExcelTable.json",
+    ]:
+        con = sqlite3.connect(
+            f"./raid_data/{'global' if protocol == 'EliminateRaidSeasonManageExcelTable.json' else 'japan'}_raid.db"
+        )
         cur = con.cursor()
         raids = data["Data"]
         for raid in raids:
@@ -185,19 +209,22 @@ def insert(data: json):
                 - timedelta(hours=1)
             ).strftime("%Y-%m-%d %H:%M:%S")
             name = raid["OpenRaidBossGroup01"].split("_")[0]
-            values = [season_id, season_display, name, start_data, end_data]
+            group1 = raid["OpenRaidBossGroup01"].split("_")[-1]
+            group2 = raid["OpenRaidBossGroup02"].split("_")[-1]
+            group3 = raid["OpenRaidBossGroup03"].split("_")[-1]
+            values = [season_id, season_display, name, start_data, end_data, group1, group2, group3]
             cur.execute(
                 """
                 INSERT OR IGNORE INTO eliminate_raid_season_manage_excel_table 
-                (season_id, season_display, name, start_data, end_data) 
-                VALUES (?, ?, ?, ?, ?);
+                (season_id, season_display, name, start_data, end_data, group1, group2, group3) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?);
                 """,
                 values,
             )
             cur.execute(
                 """
                 UPDATE eliminate_raid_season_manage_excel_table 
-                SET season_display = ?, name = ?, start_data = ?, end_data = ?
+                SET season_display = ?, name = ?, start_data = ?, end_data = ?, group1 = ?, group2 = ?, group3 = ?
                 WHERE season_id = ?;
                 """,
                 values[1:] + values[:1],

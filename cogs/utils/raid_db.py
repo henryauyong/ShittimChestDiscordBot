@@ -8,7 +8,7 @@ pwd = Path(__file__).parent
 
 timezone = pytz.timezone("Asia/Taipei")
 # CURRENT_DATETIME = datetime.now(timezone).replace(tzinfo=None)
-CURRENT_DATETIME = datetime.strptime("2024-07-02 12:59:00", "%Y-%m-%d %H:%M:%S")
+CURRENT_DATETIME = datetime.strptime("2024-08-28 12:59:00", "%Y-%m-%d %H:%M:%S")
 
 
 def get_highest_rank_user_each_tier(server: str, type: str):
@@ -27,7 +27,7 @@ def get_highest_rank_user_each_tier(server: str, type: str):
             WHERE r1.tier = ?;
             """
     extra_fields = (
-        ", r1.unarmed_score, r1.heavy_armor_score, r1.light_armor_score"
+        ", r1.unarmed_score, r1.heavy_armor_score, r1.light_armor_score, r1.elastic_armor_score"
         if type != "raid"
         else ""
     )
@@ -52,6 +52,7 @@ def get_highest_rank_user_each_tier(server: str, type: str):
                         "unarmed_score": data[2],
                         "heavy_armor_score": data[3],
                         "light_armor_score": data[4],
+                        "elastic_armor_score": data[5],
                     }
                 )
         else:
@@ -62,6 +63,7 @@ def get_highest_rank_user_each_tier(server: str, type: str):
                         "unarmed_score": None,
                         "heavy_armor_score": None,
                         "light_armor_score": None,
+                        "elastic_armor_score": None,
                     }
                 )
 
@@ -190,7 +192,7 @@ def get_all_users_rank_by_name(server: str, type: str, name: str):
             WHERE name = ?;
             """
     extra_fields = (
-        ", unarmed_score, heavy_armor_score, light_armor_score"
+        ", unarmed_score, heavy_armor_score, light_armor_score, elastic_armor_score"
         if type != "raid"
         else ""
     )
@@ -218,6 +220,7 @@ def get_all_users_rank_by_name(server: str, type: str, name: str):
                     "unarmed_score": data[4],
                     "heavy_armor_score": data[5],
                     "light_armor_score": data[6],
+                    "elastic_armor_score": data[7],
                 }
             )
     con.close()
@@ -247,3 +250,31 @@ def get_difficulty_count(server: str, type: str, difficulty_scores: dict):
     con.close()
 
     return return_data
+
+def get_eliminate_raid_groups(server: str, season_display: int):
+    con = sqlite3.connect((pwd / f"../../raid_data/{server}_raid.db").as_posix())
+    cur = con.cursor()
+    query = """
+            SELECT group1, group2, group3
+            FROM eliminate_raid_season_manage_excel_table
+            WHERE season_display = ?;
+            """
+    result = cur.execute(query, [season_display]).fetchall()
+    return_data = []
+    if len(result):
+        result = list(result[0])
+        for group in result:
+            return_data.append(group)
+    con.close()
+    return return_data
+
+def delete_data(server: str, type: str):
+    con = sqlite3.connect((pwd / f"../../raid_data/{server}_raid.db").as_posix())
+    cur = con.cursor()
+    cur.execute(
+        f"""
+        DELETE FROM {type}_opponent_list;
+        """
+    )
+    con.commit()
+    con.close()

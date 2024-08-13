@@ -37,7 +37,7 @@ with open(
 class RaidLineEmbed(discord.Embed):
     def __init__(self, server: str, current_raid: dict, bot: commands.Bot):
         super().__init__(
-            title=f"{translate[server]} 第{current_raid['season']}期{translate[current_raid['type']]} {translate[current_raid['name']]}",
+            title=f"〖{translate[server]}〗 第{current_raid['season']}期{translate[current_raid['type']]} {translate[current_raid['name']]}",
             description=f"{str(current_raid['start_date'])} - {str(current_raid['end_date'])}",
             color=discord.Color.blue(),
         )
@@ -65,10 +65,11 @@ class RaidLineEmbed(discord.Embed):
             "torment": 30000000,
         }
 
-        difficulty_count = raid_db.get_difficulty_count(
-            server, current_raid["type"], difficulty_scores
-        )
-        self.description += f"\n\nTORMENT 通關人數：{difficulty_count[1]} 人\nINSANE 通關人數：{difficulty_count[0]} 人"
+        if current_raid["type"] == "raid":
+            difficulty_count = raid_db.get_difficulty_count(
+                server, current_raid["type"], difficulty_scores
+            )
+            self.description += f"\n\nTORMENT 通關人數：{difficulty_count[1]} 人\nINSANE 通關人數：{difficulty_count[0]} 人"
 
         for tier, emoji in emojis.items():
             tier_data = score_data[tier]
@@ -87,11 +88,18 @@ class RaidLineEmbed(discord.Embed):
                         break
             elif current_raid["type"] == "eliminate_raid":
                 # Mapping of display names to actual keys
-                categories = {
-                    "輕裝甲": "light_armor_score",
-                    "重裝甲": "heavy_armor_score",
-                    "神祕裝甲": "unarmed_score",
-                }
+                groups = raid_db.get_eliminate_raid_groups(server, current_raid["season"])
+                categories = {}
+                for group in groups:
+                    if group == "LightArmor":
+                        categories["輕裝甲"] = "light_armor_score"
+                    elif group == "HeavyArmor":
+                        categories["重裝甲"] = "heavy_armor_score"
+                    elif group == "Unarmed":
+                        categories["神祕裝甲"] = "unarmed_score"
+                    elif group == "ElasticArmor":
+                        categories["彈力裝甲"] = "elastic_armor_score"
+
                 details = "\n".join(
                     [
                         f"{display_name}: {self.format_score('', tier_data.get(actual_key))[1]}"
@@ -258,46 +266,79 @@ class RaidUserView(discord.ui.View):
                 message_state[message_id]["current_page"] = current_page
 
 
-def raid_user_embed(
-    type: str, user_data: dict, raid_name: str, update_time: str, bot: commands.Bot
-):
-    emoji = ""
-    name = user_data.get("name")
-    icon_id = user_data.get("icon_id")
-    rank = user_data.get("rank")
-    tier = user_data.get("tier")
-    score = user_data.get("score")
-    if tier == 4:
-        emoji = bot.get_emoji(1257306020607430659)
-    elif tier == 3:
-        emoji = bot.get_emoji(1257307551213686857)
-    elif tier == 2:
-        emoji = bot.get_emoji(1257307549804400641)
-    elif tier == 1:
-        emoji = bot.get_emoji(1257307548424474675)
+class RaidUserEmbed(discord.Embed):
+    def __init__(self, server: str, user_data: dict, current_raid: dict, bot: commands.Bot):
+        super().__init__(
+            title=f"〖{translate[server]}〗{user_data.get('name')} 在 {translate[current_raid['name']]} 的排名",
+            color=discord.Color.blue(),
+        )
 
-    if type == "eliminate_raid":
-        unarmed_score = user_data.get("unarmed_score")
-        heavy_armor_score = user_data.get("heavy_armor_score")
-        light_armor_score = user_data.get("light_armor_score")
-    embed = discord.Embed(
-        title=f"{name} 在 {translate[raid_name]} 的排名",
-        color=discord.Color.blue(),
-    )
-    embed.set_thumbnail(
-        url=f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{icon_id}.webp"
-    )
-    if type == "raid":
-        embed.add_field(name="分數", value=f"{score:,}", inline=False)
-    elif type == "eliminate_raid":
-        embed.add_field(name="總分", value=f"{score:,}", inline=False)
-        embed.add_field(name="輕裝甲", value=f"{light_armor_score:,}", inline=False)
-        embed.add_field(name="重裝甲", value=f"{heavy_armor_score:,}", inline=False)
-        embed.add_field(name="神祕裝甲", value=f"{unarmed_score:,}", inline=False)
+        emoji = ""
+        icon_id = user_data.get("icon_id")
+        rank = user_data.get("rank")
+        tier = user_data.get("tier")
+        score = user_data.get("score")
+        type = current_raid["type"]
+        update_time = current_raid["update_time"]
+        if tier == 4:
+            emoji = bot.get_emoji(1257306020607430659)
+        elif tier == 3:
+            emoji = bot.get_emoji(1257307551213686857)
+        elif tier == 2:
+            emoji = bot.get_emoji(1257307549804400641)
+        elif tier == 1:
+            emoji = bot.get_emoji(1257307548424474675)
 
-    embed.add_field(name="排名", value=f"{emoji} {rank}", inline=False)
-    embed.set_footer(text=f"資料更新時間：{update_time}")
-    return embed
+        difficulty_scores = {
+            "normal": 0,
+            "hard": 1000000,
+            "veryhard": 2000000,
+            "hardcore": 4000000,
+            "extreme": 8000000,
+            "insane": 16000000,
+            "torment": 30000000,
+        }
+
+        self.set_thumbnail(url=f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{icon_id}.webp")
+        self.add_field(name="排名", value=f"{emoji} {rank} 名", inline=False)
+        self.set_footer(text=f"資料更新時間：{update_time}")
+        if type == "raid":
+            for difficulty_score in reversed(difficulty_scores):
+                if score >= difficulty_scores[difficulty_score]:
+                    self.add_field(
+                        name="分數",
+                        value=f"{score:,} ({difficulty_score})",
+                        inline=False,
+                    )
+                    break
+        elif type == "eliminate_raid":
+            groups = raid_db.get_eliminate_raid_groups(server, current_raid["season"])
+            categories = {}
+            for group in groups:
+                if group == "LightArmor":
+                    categories["輕裝甲"] = "light_armor_score"
+                elif group == "HeavyArmor":
+                    categories["重裝甲"] = "heavy_armor_score"
+                elif group == "Unarmed":
+                    categories["神祕裝甲"] = "unarmed_score"
+                elif group == "ElasticArmor":
+                    categories["彈力裝甲"] = "elastic_armor_score"
+            
+            details = "\n".join(
+                [
+                    f"{display_name}: {self.format_score('', user_data.get(actual_key))[1]}"
+                    for display_name, actual_key in categories.items()
+                ]
+            )
+
+            self.add_field(name="總分", value=f"{score:,}", inline=False)
+            self.add_field(name="詳細分數", value=details, inline=False)
+
+    def format_score(self, name, score):
+        if score:
+            score = int(score)
+            return name, f"{score:,}"
+        return "_無_", "_無_"
 
 
 class Commands(commands.Cog):
@@ -305,20 +346,26 @@ class Commands(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="raid-line", description="查看當期總力戰/大決戰檔線")
-    async def raid(self, interaction: discord.Interaction):
-        status = raid_db.check_current_raid("global")
+    @app_commands.describe(server="選擇伺服器")
+    @app_commands.choices(server=[
+        app_commands.Choice(name="國際服", value="global"),
+        app_commands.Choice(name="日服", value="japan"),
+    ])
+    async def raid(self, interaction: discord.Interaction, server: app_commands.Choice[str]):
+        server = server.value
+        status = raid_db.check_current_raid(server)
         if status == "True":
-            current_raid = raid_db.get_current_raid("global")
+            current_raid = raid_db.get_current_raid(server)
             embed = RaidLineEmbed(
-                "global",
+                server,
                 current_raid,
                 self.bot,
             )
             await interaction.response.send_message(embed=embed)
         elif status == "Ready":
-            current_raid = raid_db.get_current_raid("global")
+            current_raid = raid_db.get_current_raid(server)
             embed = ReadyEmbed(
-                "global",
+                server,
                 current_raid,
             )
             await interaction.response.send_message(embed=embed)
@@ -335,19 +382,23 @@ class Commands(commands.Cog):
     @app_commands.command(
         name="raid-user-search", description="查看指定玩家在當期總力戰/大決戰的排名"
     )
-    async def raid_user_search(self, interaction: discord.Interaction, user: str):
-        status = raid_db.check_current_raid("global")
+    @app_commands.describe(server="選擇伺服器")
+    @app_commands.choices(server=[
+        app_commands.Choice(name="國際服", value="global"),
+        app_commands.Choice(name="日服", value="japan"),
+    ])
+    async def raid_user_search(self, interaction: discord.Interaction, server: app_commands.Choice[str], user: str):
+        server = server.value
+        status = raid_db.check_current_raid(server)
         if status == "True":
-            current_raid = raid_db.get_current_raid("global")
-            name = current_raid["name"]
+            current_raid = raid_db.get_current_raid(server)
             type = current_raid["type"]
-            update_time = current_raid["update_time"]
             raid_user_embeds = []
-            results = raid_db.get_all_users_rank_by_name("global", type, user)
+            results = raid_db.get_all_users_rank_by_name(server, type, user)
             result_count = len(results)
             for result in results:
                 raid_user_embeds.append(
-                    raid_user_embed(type, result, name, update_time, self.bot)
+                    RaidUserEmbed(server, result, current_raid, self.bot)
                 )
 
             if result_count == 1:
@@ -368,12 +419,12 @@ class Commands(commands.Cog):
                 embed = discord.Embed(
                     title=f"沒有 {user} 的資料", color=discord.Color.red()
                 )
-                embed.set_footer(text=f"資料更新時間：{update_time}")
+                embed.set_footer(text=f"資料更新時間：{datetime.now(timezone).replace(tzinfo=None)}")
                 await interaction.response.send_message(embed=embed)
         elif status == "Ready":
-            current_raid = raid_db.get_current_raid("global")
+            current_raid = raid_db.get_current_raid(server)
             embed = ReadyEmbed(
-                "global",
+                server,
                 current_raid,
             )
             await interaction.response.send_message(embed=embed)

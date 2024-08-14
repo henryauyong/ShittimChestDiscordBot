@@ -94,6 +94,42 @@ class Admin(commands.Cog):
                 await ctx.send("Reset japan eliminate raid data")
         except Exception as e:
             await ctx.send(e)
+
+    @commands.command(name="resetgltaet", description="")
+    async def resetgltet(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                raid_db.delete_excel_table("global", "raid")
+                await ctx.send("Reset global raid excel table")
+        except Exception as e:
+            await ctx.send(e)
+    
+    @commands.command(name="resetglgaet", description="")
+    async def resetglet(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                raid_db.delete_excel_table("global", "eliminate_raid")
+                await ctx.send("Reset global eliminate raid excel table")
+        except Exception as e:
+            await ctx.send(e)
+    
+    @commands.command(name="resetjptaet", description="")
+    async def resetjptet(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                raid_db.delete_excel_table("japan", "raid")
+                await ctx.send("Reset japan raid excel table")
+        except Exception as e:
+            await ctx.send(e)
+    
+    @commands.command(name="resetjpgaet", description="")
+    async def resetjpet(self, ctx:commands.Context):
+        try:
+            if [i for i in ctx.author.roles if i.name in ADMIN_ROLES]:
+                raid_db.delete_excel_table("japan", "eliminate_raid")
+                await ctx.send("Reset japan eliminate raid excel table")
+        except Exception as e:
+            await ctx.send(e)
         
 async def setup(bot):
     await bot.add_cog(Admin(bot))

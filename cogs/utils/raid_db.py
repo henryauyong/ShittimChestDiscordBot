@@ -278,3 +278,14 @@ def delete_data(server: str, type: str):
     )
     con.commit()
     con.close()
+
+def delete_excel_table(server: str, type: str):
+    con = sqlite3.connect((pwd / f"../../raid_data/{server}_raid.db").as_posix())
+    cur = con.cursor()
+    cur.execute(
+        f"""
+        DELETE FROM {type}_season_manage_excel_table;
+        """
+    )
+    con.commit()
+    con.close()

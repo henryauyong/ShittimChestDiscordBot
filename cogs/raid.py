@@ -9,6 +9,7 @@ from datetime import timedelta
 from datetime import datetime
 import sqlite3
 from cogs.utils import raid_db
+from typing import Optional
 
 
 pwd = Path(__file__).parent
@@ -88,7 +89,9 @@ class RaidLineEmbed(discord.Embed):
                         break
             elif current_raid["type"] == "eliminate_raid":
                 # Mapping of display names to actual keys
-                groups = raid_db.get_eliminate_raid_groups(server, current_raid["season"])
+                groups = raid_db.get_eliminate_raid_groups(
+                    server, current_raid["season"]
+                )
                 categories = {}
                 for group in groups:
                     if group == "LightArmor":
@@ -267,7 +270,9 @@ class RaidUserView(discord.ui.View):
 
 
 class RaidUserEmbed(discord.Embed):
-    def __init__(self, server: str, user_data: dict, current_raid: dict, bot: commands.Bot):
+    def __init__(
+        self, server: str, user_data: dict, current_raid: dict, bot: commands.Bot
+    ):
         super().__init__(
             title=f"〖{translate[server]}〗{user_data.get('name')} 在 {translate[current_raid['name']]} 的排名",
             color=discord.Color.blue(),
@@ -299,7 +304,9 @@ class RaidUserEmbed(discord.Embed):
             "torment": 30000000,
         }
 
-        self.set_thumbnail(url=f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{icon_id}.webp")
+        self.set_thumbnail(
+            url=f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{icon_id}.webp"
+        )
         self.add_field(name="排名", value=f"{emoji} {rank} 名", inline=False)
         self.set_footer(text=f"資料更新時間：{update_time}")
         if type == "raid":
@@ -323,7 +330,7 @@ class RaidUserEmbed(discord.Embed):
                     categories["神祕裝甲"] = "unarmed_score"
                 elif group == "ElasticArmor":
                     categories["彈力裝甲"] = "elastic_armor_score"
-            
+
             details = "\n".join(
                 [
                     f"{display_name}: {self.format_score('', user_data.get(actual_key))[1]}"
@@ -347,11 +354,15 @@ class Commands(commands.Cog):
 
     @app_commands.command(name="raid-line", description="查看當期總力戰/大決戰檔線")
     @app_commands.describe(server="選擇伺服器")
-    @app_commands.choices(server=[
-        app_commands.Choice(name="國際服", value="global"),
-        app_commands.Choice(name="日服", value="japan"),
-    ])
-    async def raid(self, interaction: discord.Interaction, server: app_commands.Choice[str]):
+    @app_commands.choices(
+        server=[
+            app_commands.Choice(name="國際服", value="global"),
+            app_commands.Choice(name="日服", value="japan"),
+        ]
+    )
+    async def raid(
+        self, interaction: discord.Interaction, server: app_commands.Choice[str]
+    ):
         server = server.value
         status = raid_db.check_current_raid(server)
         if status == "True":
@@ -382,19 +393,34 @@ class Commands(commands.Cog):
     @app_commands.command(
         name="raid-user-search", description="查看指定玩家在當期總力戰/大決戰的排名"
     )
-    @app_commands.describe(server="選擇伺服器")
-    @app_commands.choices(server=[
-        app_commands.Choice(name="國際服", value="global"),
-        app_commands.Choice(name="日服", value="japan"),
-    ])
-    async def raid_user_search(self, interaction: discord.Interaction, server: app_commands.Choice[str], user: str):
+    @app_commands.describe(server="選擇伺服器", user="暱稱", tier="檔次", score="總分大於")
+    @app_commands.choices(
+        server=[
+            app_commands.Choice(name="國際服", value="global"),
+            app_commands.Choice(name="日服", value="japan"),
+        ],
+        tier=[
+            app_commands.Choice(name="銀", value=2),
+            app_commands.Choice(name="金", value=3),
+            app_commands.Choice(name="白金", value=4),
+        ],
+    )
+    async def raid_user_search(
+        self,
+        interaction: discord.Interaction,
+        server: app_commands.Choice[str],
+        user: str,
+        tier: Optional[app_commands.Choice[int]] = None,
+        score: Optional[int] = None,
+    ):
         server = server.value
         status = raid_db.check_current_raid(server)
         if status == "True":
             current_raid = raid_db.get_current_raid(server)
             type = current_raid["type"]
             raid_user_embeds = []
-            results = raid_db.get_all_users_rank_by_name(server, type, user)
+            tier = tier.value if tier else None
+            results = raid_db.get_all_users_rank_by_name(server, type, user, tier, score)
             result_count = len(results)
             for result in results:
                 raid_user_embeds.append(
@@ -419,7 +445,9 @@ class Commands(commands.Cog):
                 embed = discord.Embed(
                     title=f"沒有 {user} 的資料", color=discord.Color.red()
                 )
-                embed.set_footer(text=f"資料更新時間：{datetime.now(timezone).replace(tzinfo=None)}")
+                embed.set_footer(
+                    text=f"資料更新時間：{datetime.now(timezone).replace(tzinfo=None)}"
+                )
                 await interaction.response.send_message(embed=embed)
         elif status == "Ready":
             current_raid = raid_db.get_current_raid(server)

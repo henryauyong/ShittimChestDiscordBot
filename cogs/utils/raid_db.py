@@ -183,13 +183,13 @@ def get_current_raid(server: str):
     return None
 
 
-def get_all_users_rank_by_name(server: str, type: str, name: str):
+def get_all_users_rank_by_name(server: str, type: str, name: str, tier: int, score: int):
     con = sqlite3.connect((pwd / f"../../raid_data/{server}_raid.db").as_posix())
     cur = con.cursor()
     query = """
             SELECT rank, score, icon_id, tier{extra_fields}
             FROM {table_name}
-            WHERE name = ?;
+            WHERE name = ?{filter_tier}{filter_score};
             """
     extra_fields = (
         ", unarmed_score, heavy_armor_score, light_armor_score, elastic_armor_score"
@@ -199,8 +199,10 @@ def get_all_users_rank_by_name(server: str, type: str, name: str):
     table_name = (
         "eliminate_raid_opponent_list" if type != "raid" else "raid_opponent_list"
     )
+    filter_tier = f" AND tier = {tier}" if tier != None else ""
+    filter_score = f" AND score > {score}" if score != None else ""
     result = cur.execute(
-        query.format(extra_fields=extra_fields, table_name=table_name), [name]
+        query.format(extra_fields=extra_fields, table_name=table_name, filter_tier=filter_tier, filter_score=filter_score), [name]
     ).fetchall()
     return_data = []
     for data in result:

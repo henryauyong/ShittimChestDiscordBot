@@ -187,9 +187,10 @@ def get_all_users_rank_by_name(server: str, type: str, name: str, tier: int, sco
     con = sqlite3.connect((pwd / f"../../raid_data/{server}_raid.db").as_posix())
     cur = con.cursor()
     query = """
-            SELECT rank, score, icon_id, tier{extra_fields}
+            SELECT rank, score, icon_id, tier, update_time{extra_fields}
             FROM {table_name}
-            WHERE name = ?{filter_tier}{filter_score};
+            WHERE name = ?{filter_tier}{filter_score}
+            ORDER BY rank;
             """
     extra_fields = (
         ", unarmed_score, heavy_armor_score, light_armor_score, elastic_armor_score"
@@ -214,15 +215,16 @@ def get_all_users_rank_by_name(server: str, type: str, name: str, tier: int, sco
                 "score": data[1],
                 "icon_id": data[2],
                 "tier": data[3],
+                "update_time": data[4],
             }
         )
         if type != "raid":
             return_data[-1].update(
                 {
-                    "unarmed_score": data[4],
-                    "heavy_armor_score": data[5],
-                    "light_armor_score": data[6],
-                    "elastic_armor_score": data[7],
+                    "unarmed_score": data[5],
+                    "heavy_armor_score": data[6],
+                    "light_armor_score": data[7],
+                    "elastic_armor_score": data[8],
                 }
             )
     con.close()

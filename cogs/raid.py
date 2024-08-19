@@ -18,17 +18,26 @@ timezone = pytz.timezone("Asia/Taipei")
 # CURRENT_DATETIME = datetime.now(timezone).replace(tzinfo=None)
 CURRENT_DATETIME = datetime.strptime("2024-07-02 10:59:00", "%Y-%m-%d %H:%M:%S")
 
+# normal, hard, veryhard, hardcore, extreme, insane, torment
+difficulty_scores = {
+    "normal": 0,
+    "hard": 1000000,
+    "veryhard": 2000000,
+    "hardcore": 4000000,
+    "extreme": 8000000,
+    "insane": 16000000,
+    "torment": 30000000,
+}
+
 message_state = {}
 
 char_id = {}
 image_link = {}
+translate = {}
 with open((pwd / "../raid_data/image.json").as_posix(), "r", encoding="utf-8") as f:
     image_link = json.load(f)
 with open((pwd / "../gacha_data/japan/id.json").as_posix(), "r", encoding="utf-8") as f:
     char_id = json.load(f)
-
-translate = {}
-
 with open(
     (pwd / "../raid_data/global/translate.json").as_posix(), "r", encoding="utf-8"
 ) as f:
@@ -54,17 +63,6 @@ class RaidLineEmbed(discord.Embed):
         score_data = raid_db.get_highest_rank_user_each_tier(
             server, current_raid["type"]
         )
-
-        # normal, hard, veryhard, hardcore, extreme, insane, torment
-        difficulty_scores = {
-            "normal": 0,
-            "hard": 1000000,
-            "veryhard": 2000000,
-            "hardcore": 4000000,
-            "extreme": 8000000,
-            "insane": 16000000,
-            "torment": 30000000,
-        }
 
         if current_raid["type"] == "raid":
             difficulty_count = raid_db.get_difficulty_count(
@@ -284,7 +282,7 @@ class RaidUserEmbed(discord.Embed):
         tier = user_data.get("tier")
         score = user_data.get("score")
         type = current_raid["type"]
-        update_time = current_raid["update_time"]
+        update_time = user_data.get("update_time")
         if tier == 4:
             emoji = bot.get_emoji(1257306020607430659)
         elif tier == 3:
@@ -293,16 +291,6 @@ class RaidUserEmbed(discord.Embed):
             emoji = bot.get_emoji(1257307549804400641)
         elif tier == 1:
             emoji = bot.get_emoji(1257307548424474675)
-
-        difficulty_scores = {
-            "normal": 0,
-            "hard": 1000000,
-            "veryhard": 2000000,
-            "hardcore": 4000000,
-            "extreme": 8000000,
-            "insane": 16000000,
-            "torment": 30000000,
-        }
 
         self.set_thumbnail(
             url=f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{icon_id}.webp"
@@ -446,7 +434,7 @@ class Commands(commands.Cog):
                     title=f"沒有 {user} 的資料", color=discord.Color.red()
                 )
                 embed.set_footer(
-                    text=f"資料更新時間：{datetime.now(timezone).replace(tzinfo=None)}"
+                    text=f"資料更新時間：{datetime.now(timezone).strftime('%Y-%m-%d %H:%M:%S')}"
                 )
                 await interaction.response.send_message(embed=embed)
         elif status == "Ready":

@@ -23,6 +23,7 @@ def insert(data: json):
         cur = con.cursor()
         data = json.loads(data["packet"])
         current_raid_users = data["OpponentUserDBs"]
+        current_time = str(datetime.now(timezone).replace(tzinfo=None)).split(".")[0]
         rank_bracket = 0
         score_bracket = 0
         for user in current_raid_users:
@@ -32,27 +33,27 @@ def insert(data: json):
             rank = user["Rank"]
             tier = user["Tier"]
             score = user["BestRankingPoint"]
+            update_time = current_time
             rank_bracket = rank
             score_bracket = score
             values = [account_id, name, icon_id, rank, tier, score]
             cur.execute(
                 """
                 INSERT OR IGNORE INTO raid_opponent_list 
-                (account_id, name, icon_id, rank, tier, score) 
-                VALUES (?, ?, ?, ?, ?, ?);
+                (account_id, name, icon_id, rank, tier, score, update_time) 
+                VALUES (?, ?, ?, ?, ?, ?, ?);
                 """,
                 values,
             )
             cur.execute(
                 """
                 UPDATE raid_opponent_list 
-                SET name = ?, icon_id = ?, rank = ?, tier = ?, score = ? 
+                SET name = ?, icon_id = ?, rank = ?, tier = ?, score = ?, update_time = ?
                 WHERE account_id = ?;
                 """,
                 values[1:] + values[:1],
             )
         current_time_list = []
-        current_time = str(datetime.now(timezone).replace(tzinfo=None)).split(".")[0]
         current_time_list.append(current_time)
         cur.execute(
             """
@@ -113,6 +114,7 @@ def insert(data: json):
         current_raid_users = data["OpponentUserDBs"]
         rank_bracket = 0
         score_bracket = 0
+        current_time = str(datetime.now(timezone).replace(tzinfo=None)).split(".")[0]
         for user in current_raid_users:
             account_id = user["AccountId"]
             name = user["Nickname"]
@@ -120,6 +122,7 @@ def insert(data: json):
             rank = user["Rank"]
             tier = user["Tier"]
             score = user["BestRankingPoint"]
+            update_time = current_time
             rank_bracket = rank
             score_bracket = score
             unarmed_score = [
@@ -157,25 +160,25 @@ def insert(data: json):
                 heavy_armor_score,
                 light_armor_score,
                 elastic_armor_score,
+                update_time,
             ]
             cur.execute(
                 """
                 INSERT OR IGNORE INTO eliminate_raid_opponent_list 
-                (account_id, name, icon_id, rank, tier, score, unarmed_score, heavy_armor_score, light_armor_score, elastic_armor_score)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                (account_id, name, icon_id, rank, tier, score, unarmed_score, heavy_armor_score, light_armor_score, elastic_armor_score, update_time)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """,
                 values,
             )
             cur.execute(
                 """
                 UPDATE eliminate_raid_opponent_list 
-                SET name = ?, icon_id = ?, rank = ?, tier = ?, score = ?, unarmed_score = ?, heavy_armor_score = ?, light_armor_score = ?, elastic_armor_score = ?
+                SET name = ?, icon_id = ?, rank = ?, tier = ?, score = ?, unarmed_score = ?, heavy_armor_score = ?, light_armor_score = ?, elastic_armor_score = ?, update_time = ?
                 WHERE account_id = ?;
                 """,
                 values[1:] + values[:1],
             )
         current_time_list = []
-        current_time = str(datetime.now(timezone).replace(tzinfo=None)).split(".")[0]
         current_time_list.append(current_time)
         cur.execute(
             """

@@ -6,8 +6,8 @@ import re
 pwd = Path(__file__).parent
 
 def update():
-    char_data = requests.get("https://schaledb.com/data/jp/students.min.json")
-    char_data = json.loads(char_data.text)
+    raw_char_data = requests.get("https://schaledb.com/data/jp/students.min.json")
+    raw_char_data = json.loads(raw_char_data.text)
 
     banner_data = requests.get("https://api.ennead.cc/buruaka/banner?region=japan")
     banner_data = json.loads(banner_data.text)
@@ -20,6 +20,8 @@ def update():
     old_data = []
 
     current_banners = []
+
+    char_data = raw_char_data.values()
 
     # Translate character name
     with open((pwd/"../../gacha_data/japan/translate.json").as_posix(), "w", encoding="utf-8") as f:

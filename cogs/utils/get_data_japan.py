@@ -6,7 +6,7 @@ import re
 pwd = Path(__file__).parent
 
 def update():
-    char_data = requests.get("https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/data/jp/students.min.json")
+    char_data = requests.get("https://schaledb.com/data/jp/students.min.json")
     char_data = json.loads(char_data.text)
 
     banner_data = requests.get("https://api.ennead.cc/buruaka/banner?region=japan")
@@ -44,7 +44,7 @@ def update():
             name = i["PathName"]
             char_id = i["Id"]
             if name not in old_name:
-                img_data = requests.get(f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{char_id}.webp").content
+                img_data = requests.get(f"https://schaledb.com/images/student/icon/{char_id}.webp").content
                 with open((pwd/(f"../../gacha_data/japan/image/{name}.png")).as_posix(), "wb") as f2:
                     f2.write(img_data)
                 print(f"Added {name}")

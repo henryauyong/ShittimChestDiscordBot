@@ -36,7 +36,7 @@ def insert(data: json):
             update_time = current_time
             rank_bracket = rank
             score_bracket = score
-            values = [account_id, name, icon_id, rank, tier, score]
+            values = [account_id, name, icon_id, rank, tier, score, update_time]
             cur.execute(
                 """
                 INSERT OR IGNORE INTO raid_opponent_list 

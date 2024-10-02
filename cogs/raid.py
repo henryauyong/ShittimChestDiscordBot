@@ -78,10 +78,18 @@ class RaidLineEmbed(discord.Embed):
             score = tier_data.get("score")
             if current_raid["type"] == "raid":
                 for difficulty_score in reversed(difficulty_scores):
-                    if score >= difficulty_scores[difficulty_score]:
+                    if score:
+                        if score >= difficulty_scores[difficulty_score]:
+                            self.add_field(
+                                name=f"{emoji} 第一名：{name}",
+                                value=f"分數：{fscore} ({difficulty_score})",
+                                inline=False,
+                            )
+                            break
+                    else:
                         self.add_field(
-                            name=f"{emoji} 第一名：{name}",
-                            value=f"分數：{fscore} ({difficulty_score})",
+                            name=f"{emoji} 第一名：_無_",
+                            value=f"分數：_無_",
                             inline=False,
                         )
                         break

@@ -87,4 +87,9 @@ def update():
     
     print("Updated global data")
 
-update()
+try:
+    update()
+except Exception as e:
+    print(e)
+    print("Failed to update global data")
+    pass

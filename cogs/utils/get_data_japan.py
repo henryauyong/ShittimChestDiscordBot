@@ -111,4 +111,9 @@ def update():
 
     print("Updated Japan data")
 
-update()
+try:
+    update()
+except Exception as e:
+    print(e)
+    print("Failed to update japan data")
+    pass

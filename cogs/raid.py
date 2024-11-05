@@ -342,6 +342,20 @@ class RaidUserEmbed(discord.Embed):
             score = int(score)
             return name, f"{score:,}"
         return "_無_", "_無_"
+    
+
+class BrokenEmbed(discord.Embed):
+    def __init__(self):
+        super().__init__(
+            title="伺服器壞掉了",
+            description="無限期停止服務",
+            color=discord.Color.red(),
+        )
+        self.set_footer(
+            text=f"資料更新時間： :st_atsuko_grin:"
+        )
+        self.set_thumbnail(url="https://i.redd.it/zssakw8wpj4a1.jpg")
+        self.set_image(url="https://cdn.discordapp.com/attachments/1155803449699618887/1303021502228074546/image0.jpg?ex=672ae597&is=67299417&hm=455a78c3b51d8affaf3327c649961968bfbb3ac19b9c9bae7868c50479ccaad9&")
 
 
 class Commands(commands.Cog):
@@ -359,6 +373,11 @@ class Commands(commands.Cog):
     async def raid(
         self, interaction: discord.Interaction, server: app_commands.Choice[str]
     ):
+        embed = BrokenEmbed()
+        await interaction.response.send_message(embed=embed)
+        return
+
+
         server = server.value
         status = raid_db.check_current_raid(server)
         if status == "True":
@@ -409,6 +428,11 @@ class Commands(commands.Cog):
         tier: Optional[app_commands.Choice[int]] = None,
         score: Optional[int] = None,
     ):
+        embed = BrokenEmbed()
+        await interaction.response.send_message(embed=embed)
+        return
+
+
         server = server.value
         status = raid_db.check_current_raid(server)
         if status == "True":

@@ -373,9 +373,9 @@ class Commands(commands.Cog):
     async def raid(
         self, interaction: discord.Interaction, server: app_commands.Choice[str]
     ):
-        embed = BrokenEmbed()
-        await interaction.response.send_message(embed=embed)
-        return
+        # embed = BrokenEmbed()
+        # await interaction.response.send_message(embed=embed)
+        # return
 
 
         server = server.value
@@ -428,9 +428,9 @@ class Commands(commands.Cog):
         tier: Optional[app_commands.Choice[int]] = None,
         score: Optional[int] = None,
     ):
-        embed = BrokenEmbed()
-        await interaction.response.send_message(embed=embed)
-        return
+        # embed = BrokenEmbed()
+        # await interaction.response.send_message(embed=embed)
+        # return
 
 
         server = server.value

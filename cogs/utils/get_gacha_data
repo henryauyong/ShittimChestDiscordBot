@@ -1,0 +1,123 @@
+import requests
+import json
+from pathlib import Path
+import sqlite3
+
+pwd = Path(__file__).parent
+
+
+def update():
+    char_data_jp = requests.get("https://schaledb.com/data/jp/students.min.json")
+    char_data_jp = json.loads(char_data_jp.text)
+    char_data_jp = char_data_jp.values()
+    char_data_tw = requests.get("https://schaledb.com/data/tw/students.min.json")
+    char_data_tw = json.loads(char_data_tw.text)
+    char_data_tw = char_data_tw.values()
+    char_data_en = requests.get("https://schaledb.com/data/en/students.min.json")
+    char_data_en = json.loads(char_data_en.text)
+    char_data_en = char_data_en.values()
+    banner_data_jp = requests.get("https://api.ennead.cc/buruaka/banner?region=japan")
+    banner_data_jp = json.loads(banner_data_jp.text)
+    banner_data_gl = requests.get("https://api.ennead.cc/buruaka/banner?region=global")
+    banner_data_gl = json.loads(banner_data_gl.text)
+
+    con = sqlite3.connect((pwd / f"../../gacha_data/gacha_data.db").as_posix())
+    cur = con.cursor()
+    for char in char_data_jp:
+        id = char["Id"]
+        name_jp = char["Name"]
+        star_grade = char["StarGrade"]
+        is_limited = char["IsLimited"]
+        in_global = char["IsReleased"][1]
+        cur.execute(
+            """
+            INSERT OR REPLACE INTO students_list (id, name_jp, star_grade, is_limited, in_global)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (id, name_jp, star_grade, is_limited, in_global),
+        )
+        image = (pwd / f"../../gacha_data/images/{id}.png").as_posix()
+        if not Path(image).exists():
+            image_data = requests.get(f"https://schaledb.com/images/student/icon/{id}.webp").content
+            with open(image, "wb") as f:
+                f.write(image_data)
+            print(f"Downloaded {id}.png")
+    for char in char_data_tw:
+        id = char["Id"]
+        name_tw = char["Name"]
+        cur.execute(
+            """
+            UPDATE students_list
+            SET name_tw = ?
+            WHERE id = ?
+            """,
+            (name_tw, id),
+        )
+    for char in char_data_en:
+        id = char["Id"]
+        name_en = char["Name"]
+        cur.execute(
+            """
+            UPDATE students_list
+            SET name_en = ?
+            WHERE id = ?
+            """,
+            (name_en, id),
+        )
+
+    for banner in banner_data_jp["current"]:
+        cur
+        gacha_type = banner["gachaType"]
+        rateups = banner["rateups"]
+        for rateup in rateups: # get chara ids from jp names
+            cur.execute(
+                """
+                SELECT id
+                FROM students_list
+                WHERE name_jp = ?
+                """,
+                (rateup,),
+            )
+            rateup_id = cur.fetchone()[0]
+            rateups[rateups.index(rateup)] = rateup_id
+
+        cur.execute("DELETE FROM current_banner_jp")
+        query = """
+            INSERT OR REPLACE INTO current_banner_jp (type, rateup_1, rateup_2)
+            VALUES (?, ?, ?)
+            """
+        if len(rateups) == 1:
+            cur.execute(query, (gacha_type, rateups[0], None))
+        else:
+            cur.execute(query, (gacha_type, rateups[0], rateups[1]))
+
+    for banner in banner_data_gl["current"]:
+        gacha_type = banner["gachaType"]
+        rateups = banner["rateups"]
+        for rateup in rateups: # get chara ids from en names
+            cur.execute(
+                """
+                SELECT id
+                FROM students_list
+                WHERE name_en = ?
+                """,
+                (rateup,),
+            )
+            rateup_id = cur.fetchone()[0]
+            rateups[rateups.index(rateup)] = rateup_id
+
+        cur.execute("DELETE FROM current_banner_gl")
+        query = f"""
+            INSERT OR REPLACE INTO current_banner_gl (type, rateup_1, rateup_2)
+            VALUES (?, ?, ?)
+            """
+        if len(rateups) == 1:
+            cur.execute(query, (gacha_type, rateups[0], None))
+        else:
+            cur.execute(query, (gacha_type, rateups[0], rateups[1]))
+
+    con.commit()
+    con.close()
+
+
+update()

@@ -30,7 +30,7 @@ def update():
             name = i["name"]
             char_id = i["id"]
             if name not in old_name:
-                img_data = requests.get(f"https://raw.githubusercontent.com/SchaleDB/SchaleDB/main/images/student/icon/{char_id}.webp").content
+                img_data = requests.get(f"https://schaledb.com/images/student/icon/{char_id}.webp").content
                 with open((pwd/(f"../../gacha_data/global/image/{name}.png")).as_posix(), "wb") as f2:
                     f2.write(img_data)
                 print(f"Added {name}")
